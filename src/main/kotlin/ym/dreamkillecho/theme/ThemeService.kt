@@ -59,7 +59,7 @@ class ThemeService(private val plugin: JavaPlugin, yaml: YamlConfiguration) {
     }
 
     private fun defaultTheme(): Map<String, KillTheme> = mapOf(
-        "default" to KillTheme("default", "Default", "dreamkillecho.theme.default", 0, "<prefix> <killer> killed <victim>")
+        "default" to KillTheme("default", "Default", "dreamkillecho.default", 0, "<prefix> <killer> killed <victim>")
     )
 
     private fun String?.isAutoTheme(): Boolean {
