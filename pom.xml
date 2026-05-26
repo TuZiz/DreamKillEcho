@@ -18,6 +18,7 @@
         <spigot.version>1.21.1-R0.1-SNAPSHOT</spigot.version>
         <adventure.version>4.17.0</adventure.version>
         <adventure.platform.version>4.3.4</adventure.platform.version>
+        <slf4j.version>1.7.36</slf4j.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -69,6 +70,11 @@
             <groupId>com.zaxxer</groupId>
             <artifactId>HikariCP</artifactId>
             <version>5.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-nop</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
         <dependency>
             <groupId>org.xerial</groupId>
