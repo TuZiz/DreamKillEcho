@@ -7,12 +7,14 @@ import org.bukkit.command.TabCompleter
 import ym.dreamkillecho.DreamKillEcho
 import ym.dreamkillecho.bootstrap.PluginServices
 import ym.dreamkillecho.command.sub.CustomCommand
+import ym.dreamkillecho.command.sub.GuiCommand
 import ym.dreamkillecho.command.sub.HelpCommand
 import ym.dreamkillecho.command.sub.ReloadCommand
 import ym.dreamkillecho.command.sub.ReviewCommand
 import ym.dreamkillecho.command.sub.StatsCommand
 import ym.dreamkillecho.command.sub.ThemeCommand
 import ym.dreamkillecho.command.sub.ToggleCommand
+import ym.dreamkillecho.util.Permissions
 
 class CommandRouter(private val plugin: DreamKillEcho) : CommandExecutor, TabCompleter {
     @Volatile
@@ -21,6 +23,7 @@ class CommandRouter(private val plugin: DreamKillEcho) : CommandExecutor, TabCom
         HelpCommand(),
         ReloadCommand(),
         ToggleCommand(),
+        GuiCommand(),
         ThemeCommand(),
         CustomCommand(),
         ReviewCommand(),
@@ -32,6 +35,15 @@ class CommandRouter(private val plugin: DreamKillEcho) : CommandExecutor, TabCom
     }
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
+        if (!sender.hasPermission(Permissions.USE)) {
+            val current = services
+            if (current != null) {
+                CommandUtil.deny(sender, current)
+            } else {
+                sender.sendMessage("No permission.")
+            }
+            return true
+        }
         val current = services
         if (current == null) {
             sender.sendMessage("DreamKillEcho is loading.")
@@ -43,6 +55,7 @@ class CommandRouter(private val plugin: DreamKillEcho) : CommandExecutor, TabCom
     }
 
     override fun onTabComplete(sender: CommandSender, command: Command, alias: String, args: Array<out String>): List<String> {
+        if (!sender.hasPermission(Permissions.USE)) return emptyList()
         val current = services ?: return emptyList()
         if (args.size == 1) {
             return subCommands.flatMap { it.names }.distinct().filter { it.startsWith(args[0], true) }

@@ -6,6 +6,7 @@ import ym.dreamkillecho.bootstrap.PluginServices
 import ym.dreamkillecho.command.CommandRouter
 import ym.dreamkillecho.config.ConfigService
 import ym.dreamkillecho.death.DeathListener
+import ym.dreamkillecho.gui.ThemeMenuListener
 import ym.dreamkillecho.message.MessageService
 import ym.dreamkillecho.scheduler.SchedulerAdapter
 import ym.dreamkillecho.storage.StorageService
@@ -31,7 +32,7 @@ class DreamKillEcho : JavaPlugin() {
 
         schedulerAdapter.runAsync {
             try {
-                Resources.ensureDefaults(this, listOf("config.yml", "lang/zh_cn.yml", "lang/en_us.yml", "themes.yml", "storage.yml"))
+                Resources.ensureDefaults(this, listOf("config.yml", "lang/zh_cn.yml", "lang/en_us.yml", "themes.yml", "storage.yml", "gui/theme-menu.yml"))
                 val configService = ConfigService.load(this)
                 val messageService = MessageService(this, configService.language, configService.fallbackLanguage)
                 val storage = StorageService(this, configService.storage)
@@ -41,6 +42,7 @@ class DreamKillEcho : JavaPlugin() {
                     services = built
                     executor.bind(built)
                     server.pluginManager.registerEvents(DeathListener(built), this)
+                    server.pluginManager.registerEvents(ThemeMenuListener(this), this)
                     built.storage.prepareOnlinePlayers()
                     built.startTimers()
                     logger.info("[DreamKillEcho] Enabled on ${schedulerAdapter.platformName}.")

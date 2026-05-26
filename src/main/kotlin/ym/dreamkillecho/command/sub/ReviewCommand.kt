@@ -1,6 +1,7 @@
 package ym.dreamkillecho.command.sub
 
 import org.bukkit.command.CommandSender
+import org.bukkit.entity.Player
 import ym.dreamkillecho.command.CommandContext
 import ym.dreamkillecho.command.CommandUtil
 import ym.dreamkillecho.command.SubCommand
@@ -19,29 +20,57 @@ class ReviewCommand : SubCommand {
     }
 
     private fun review(sender: CommandSender, context: CommandContext): Boolean {
-        val pending = context.services.customMessages.pending()
-        if (pending.isEmpty()) {
-            context.services.messages.send(sender, "review-empty")
-            return true
-        }
-        context.services.messages.send(sender, "review-header")
-        for (profile in pending) {
-            context.services.messages.send(sender, "review-entry", mapOf("player" to profile.name, "message" to (profile.customMessage ?: "")))
+        context.services.customMessages.pendingAsync().thenAccept { pending ->
+            val task = {
+                if (pending.isEmpty()) {
+                    context.services.messages.send(sender, "review-empty")
+                } else {
+                    context.services.messages.send(sender, "review-header")
+                    for (profile in pending) {
+                        context.services.messages.send(sender, "review-entry", mapOf("player" to profile.name, "message" to (profile.customMessage ?: "")))
+                    }
+                }
+            }
+            runSenderTask(sender, context, task)
         }
         return true
     }
 
     private fun approve(sender: CommandSender, target: String?, context: CommandContext): Boolean {
-        val profile = CommandUtil.findProfile(target, context.services) ?: return context.services.messages.send(sender, "error-player-not-found").let { true }
-        context.services.customMessages.approve(profile)
-        context.services.messages.send(sender, "approve-success", mapOf("player" to profile.name))
+        val lookup = target ?: return context.services.messages.send(sender, "error-player-not-found").let { true }
+        context.services.storage.findProfileAsync(lookup).thenAccept { profile ->
+            val task = {
+                if (profile == null) {
+                    context.services.messages.send(sender, "error-player-not-found")
+                } else if (!context.services.customMessages.approve(profile)) {
+                    context.services.messages.send(sender, "review-not-pending")
+                } else {
+                    context.services.messages.send(sender, "approve-success", mapOf("player" to profile.name))
+                }
+            }
+            runSenderTask(sender, context, task)
+        }
         return true
     }
 
     private fun deny(sender: CommandSender, target: String?, context: CommandContext): Boolean {
-        val profile = CommandUtil.findProfile(target, context.services) ?: return context.services.messages.send(sender, "error-player-not-found").let { true }
-        context.services.customMessages.deny(profile)
-        context.services.messages.send(sender, "deny-success", mapOf("player" to profile.name))
+        val lookup = target ?: return context.services.messages.send(sender, "error-player-not-found").let { true }
+        context.services.storage.findProfileAsync(lookup).thenAccept { profile ->
+            val task = {
+                if (profile == null) {
+                    context.services.messages.send(sender, "error-player-not-found")
+                } else if (!context.services.customMessages.deny(profile)) {
+                    context.services.messages.send(sender, "review-not-pending")
+                } else {
+                    context.services.messages.send(sender, "deny-success", mapOf("player" to profile.name))
+                }
+            }
+            runSenderTask(sender, context, task)
+        }
         return true
+    }
+
+    private fun runSenderTask(sender: CommandSender, context: CommandContext, task: () -> Unit) {
+        if (sender is Player) context.services.scheduler.runEntity(sender, task) else context.services.scheduler.runMain(task)
     }
 }

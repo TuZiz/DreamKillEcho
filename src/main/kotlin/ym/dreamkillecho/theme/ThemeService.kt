@@ -3,6 +3,7 @@ package ym.dreamkillecho.theme
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+import ym.dreamkillecho.storage.StorageService
 
 data class KillTheme(
     val id: String,
@@ -21,17 +22,24 @@ class ThemeService(private val plugin: JavaPlugin, yaml: YamlConfiguration) {
 
     fun require(id: String): KillTheme? = themes[id]
 
+    fun isUnlocked(player: Player, theme: KillTheme): Boolean = player.hasPermission(theme.permission)
+
+    fun select(player: Player, theme: KillTheme, storage: StorageService) {
+        storage.profile(player.uniqueId, player.name).selectedTheme = theme.id
+        storage.markProfileDirty(player.uniqueId)
+    }
+
     fun firstAvailable(player: Player, selected: String?): KillTheme {
         if (!selected.isAutoTheme()) {
             val selectedTheme = require(selected!!)
-            if (selectedTheme != null && player.hasPermission(selectedTheme.permission)) return selectedTheme
+            if (selectedTheme != null && isUnlocked(player, selectedTheme)) return selectedTheme
         }
         return highestAvailable(player)
     }
 
     private fun highestAvailable(player: Player): KillTheme {
         return themes.values
-            .filter { player.hasPermission(it.permission) }
+            .filter { isUnlocked(player, it) }
             .maxWithOrNull(compareBy<KillTheme> { it.priority }.thenBy { it.id })
             ?: themes["default"]
             ?: themes.values.first()
@@ -59,7 +67,7 @@ class ThemeService(private val plugin: JavaPlugin, yaml: YamlConfiguration) {
     }
 
     private fun defaultTheme(): Map<String, KillTheme> = mapOf(
-        "default" to KillTheme("default", "Default", "dreamkillecho.default", 0, "<prefix> <killer> killed <victim>")
+        "default" to KillTheme("default", "Default", "dreamkillecho.theme.default", 0, "<prefix> <killer> killed <victim>")
     )
 
     private fun String?.isAutoTheme(): Boolean {

@@ -9,6 +9,8 @@ import ym.dreamkillecho.bootstrap.PluginServices
 import ym.dreamkillecho.storage.KillLog
 
 class DeathListener(private val services: PluginServices) : Listener {
+    private val foliaMode = services.scheduler.platformName.contains("Folia", ignoreCase = true)
+
     @EventHandler
     fun onJoin(event: PlayerJoinEvent) {
         services.storage.preparePlayerAsync(event.player.uniqueId, event.player.name)
@@ -34,12 +36,20 @@ class DeathListener(private val services: PluginServices) : Listener {
             val update = services.storage.recordDeath(context.victim.uniqueId, context.killer?.uniqueId, process.countStats)
             previousVictimStreak = update.previousVictimStreak
             if (context.killer != null && process.countStats) {
+                val themeName = if (foliaMode) {
+                    "default"
+                } else {
+                    services.themes.firstAvailable(
+                        context.killer,
+                        services.storage.profile(context.killer.uniqueId, context.killer.name).selectedTheme
+                    ).displayName
+                }
                 services.deathAnalyzer.fillPlaceholders(
                     context,
                     update.killerStreak,
                     update.killerMaxStreak,
                     services.messages.prefix,
-                    services.themes.firstAvailable(context.killer, services.storage.profile(context.killer.uniqueId, context.killer.name).selectedTheme).displayName,
+                    themeName,
                     services.config.settings.serverName
                 )
             } else {

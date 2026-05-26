@@ -24,6 +24,7 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     private val stats = ConcurrentHashMap<UUID, PlayerStats>()
     private val dirtyProfiles = ConcurrentHashMap.newKeySet<UUID>()
     private val dirtyStats = ConcurrentHashMap.newKeySet<UUID>()
+    private val profileLock = Any()
     private val statsLock = Any()
     private val playerRepository = PlayerRepository()
     private val statsRepository = StatsRepository()
@@ -59,9 +60,11 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
             if (degraded) {
                 profiles.computeIfAbsent(uuid) { PlayerProfile(uuid, name) }.also { it.name = name }
             } else {
-                loadOrCreateProfile(uuid, name).also { profiles[uuid] = it }
-                loadOrCreateStats(uuid).also { loaded -> synchronized(statsLock) { stats[uuid] = loaded } }
-                profiles[uuid]!!
+                val loadedProfile = loadOrCreateProfile(uuid, name)
+                val loadedStats = loadOrCreateStats(uuid)
+                mergeProfile(uuid, loadedProfile)
+                mergeStats(uuid, loadedStats)
+                profiles[uuid] ?: loadedProfile
             }
         }, executor).exceptionally { throwable ->
             plugin.logger.warning("[DreamKillEcho] Failed to load player $name: ${throwable.message}")
@@ -89,7 +92,7 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
                 dataSource?.connection?.use { connection -> statsRepository.load(connection, uuid) }
                     ?: PlayerStats(uuid)
             }.also { loaded ->
-                synchronized(statsLock) { stats.putIfAbsent(uuid, loaded) }
+                mergeStats(uuid, loaded)
             }.copy()
         }, executor).exceptionally { throwable ->
             plugin.logger.warning("[DreamKillEcho] Failed to load stats for $uuid: ${throwable.message}")
@@ -98,8 +101,10 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     fun markProfileDirty(uuid: UUID) {
-        profile(uuid).updatedAt = System.currentTimeMillis()
-        dirtyProfiles += uuid
+        synchronized(profileLock) {
+            profile(uuid).updatedAt = System.currentTimeMillis()
+            dirtyProfiles += uuid
+        }
     }
 
     fun markStatsDirty(uuid: UUID) {
@@ -111,7 +116,16 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
 
     fun findProfileAsync(nameOrUuid: String): CompletableFuture<PlayerProfile?> {
         uuidFromStringOrNull(nameOrUuid)?.let { uuid ->
-            return CompletableFuture.completedFuture(profile(uuid))
+            profiles[uuid]?.let { return CompletableFuture.completedFuture(it) }
+            return CompletableFuture.supplyAsync({
+                if (degraded) null else dataSource?.connection?.use { connection -> playerRepository.load(connection, uuid) }
+            }, executor).thenApply { loaded ->
+                loaded?.also { mergeProfile(it.uuid, it) }
+                profiles[uuid]
+            }.exceptionally { throwable ->
+                plugin.logger.warning("[DreamKillEcho] Failed to find player $nameOrUuid: ${throwable.message}")
+                null
+            }
         }
         profiles.values.firstOrNull { it.name.equals(nameOrUuid, ignoreCase = true) }?.let {
             return CompletableFuture.completedFuture(it)
@@ -119,10 +133,29 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
         return CompletableFuture.supplyAsync({
             if (degraded) null else dataSource?.connection?.use { connection -> playerRepository.findByName(connection, nameOrUuid) }
         }, executor).thenApply { loaded ->
-            loaded?.also { profiles[it.uuid] = it }
+            loaded?.also { mergeProfile(it.uuid, it) }
+            loaded?.uuid?.let { profiles[it] }
         }.exceptionally { throwable ->
             plugin.logger.warning("[DreamKillEcho] Failed to find player $nameOrUuid: ${throwable.message}")
             null
+        }
+    }
+
+    fun pendingCustomMessagesAsync(): CompletableFuture<List<PlayerProfile>> {
+        return CompletableFuture.supplyAsync({
+            if (!degraded) {
+                dataSource?.connection?.use { connection ->
+                    playerRepository.pendingCustomMessages(connection).forEach { mergeProfile(it.uuid, it) }
+                }
+            }
+            profiles.values
+                .filter { it.customMessageStatus == CustomMessageStatus.PENDING }
+                .sortedByDescending { it.customMessageUpdatedAt }
+        }, executor).exceptionally { throwable ->
+            plugin.logger.warning("[DreamKillEcho] Failed to load pending custom messages: ${throwable.message}")
+            profiles.values
+                .filter { it.customMessageStatus == CustomMessageStatus.PENDING }
+                .sortedByDescending { it.customMessageUpdatedAt }
         }
     }
 
@@ -167,22 +200,36 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     fun flushAsync(): CompletableFuture<Void> {
         return CompletableFuture.runAsync({
             if (degraded) return@runAsync
-            val profileIds = dirtyProfiles.toList()
+            val profileCopies = dirtyProfiles.toList().mapNotNull { uuid -> profiles[uuid]?.copy() }
             val statCopies = synchronized(statsLock) {
                 dirtyStats.toList().mapNotNull { uuid -> stats[uuid]?.copy() }
             }
             dataSource?.connection?.use { connection ->
                 connection.autoCommit = false
                 try {
-                    for (uuid in profileIds) {
-                        profiles[uuid]?.let { playerRepository.save(connection, it) }
-                        dirtyProfiles -= uuid
+                    for (copy in profileCopies) {
+                        playerRepository.save(connection, copy)
                     }
                     for (copy in statCopies) {
                         statsRepository.save(connection, copy)
-                        dirtyStats -= copy.uuid
                     }
                     connection.commit()
+                    synchronized(profileLock) {
+                        for (copy in profileCopies) {
+                            val current = profiles[copy.uuid]
+                            if (current != null && current.updatedAt == copy.updatedAt) {
+                                dirtyProfiles -= copy.uuid
+                            }
+                        }
+                    }
+                    synchronized(statsLock) {
+                        for (copy in statCopies) {
+                            val current = stats[copy.uuid]
+                            if (current != null && current.updatedAt == copy.updatedAt) {
+                                dirtyStats -= copy.uuid
+                            }
+                        }
+                    }
                 } catch (ex: Exception) {
                     connection.rollback()
                     throw ex
@@ -196,7 +243,7 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
         }
     }
 
-    fun topStats(type: String, limit: Int): CompletableFuture<List<PlayerStats>> {
+    fun topStats(type: String, limit: Int): CompletableFuture<List<LeaderboardRow>> {
         return CompletableFuture.supplyAsync({
             val column = if (type.equals("streak", true)) "max_streak" else "kills"
             if (degraded) {
@@ -204,6 +251,16 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
                     stats.values.map { it.copy() }
                         .sortedByDescending { if (column == "max_streak") it.maxStreak else it.kills }
                         .take(limit)
+                        .map { row ->
+                            LeaderboardRow(
+                                uuid = row.uuid,
+                                name = profiles[row.uuid]?.name ?: row.uuid.toString(),
+                                kills = row.kills,
+                                deaths = row.deaths,
+                                currentStreak = row.currentStreak,
+                                maxStreak = row.maxStreak
+                            )
+                        }
                 }
             } else {
                 dataSource?.connection?.use { connection ->
@@ -232,8 +289,8 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
             playerRepository.load(connection, uuid)?.let { loaded ->
                 if (loaded.name != name) {
                     loaded.name = name
-                    profiles[uuid] = loaded
-                    dirtyProfiles += uuid
+                    loaded.updatedAt = System.currentTimeMillis()
+                    playerRepository.save(connection, loaded)
                 }
                 return loaded
             }
@@ -252,5 +309,25 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
 
     private fun uuidFromStringOrNull(value: String): UUID? {
         return runCatching { UUID.fromString(value) }.getOrNull()
+    }
+
+    private fun mergeProfile(uuid: UUID, loaded: PlayerProfile) {
+        synchronized(profileLock) {
+            val current = profiles[uuid]
+            if (uuid in dirtyProfiles || (current != null && current.updatedAt >= loaded.updatedAt)) {
+                return
+            }
+            profiles[uuid] = loaded
+        }
+    }
+
+    private fun mergeStats(uuid: UUID, loaded: PlayerStats) {
+        synchronized(statsLock) {
+            val current = stats[uuid]
+            if (uuid in dirtyStats || (current != null && current.updatedAt >= loaded.updatedAt)) {
+                return
+            }
+            stats[uuid] = loaded
+        }
     }
 }

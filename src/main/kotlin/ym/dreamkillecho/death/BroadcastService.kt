@@ -25,13 +25,34 @@ class BroadcastService(
     fun broadcast(context: DeathContext) {
         if (!settings.broadcast.enabled) return
         val killer = context.killer
-        val template = if (killer != null) playerKillTemplate(killer, context) else environmentTemplate(context)
-        sendTemplate(receivers(context), template, context.placeholders, context.componentPlaceholders, useCooldown = true)
+        val receivers = receivers(context)
+        if (killer != null && foliaMode) {
+            scheduler.runEntity(killer) {
+                val placeholders = context.placeholders.toMutableMap()
+                val template = playerKillTemplate(killer, context, placeholders)
+                sendTemplate(receivers, template, placeholders, context.componentPlaceholders, useCooldown = true)
+            }
+            return
+        }
+        val template = if (killer != null) playerKillTemplate(killer, context, context.placeholders) else environmentTemplate(context)
+        sendTemplate(receivers, template, context.placeholders, context.componentPlaceholders, useCooldown = true)
     }
 
     fun sendCard(context: DeathContext) {
         if (!settings.card.enabled || context.killer == null) return
         val killer = context.killer
+        if (foliaMode) {
+            scheduler.runEntity(killer) {
+                if (!killer.hasPermission(Permissions.CARD_VIP) && !killer.hasPermission(Permissions.CARD_SVIP)) return@runEntity
+                val receivers = when (settings.card.mode.lowercase()) {
+                    "global" -> Bukkit.getOnlinePlayers().toList()
+                    "nearby" -> nearbyOrFallback(context, settings.card.nearbyRange)
+                    else -> listOf(killer)
+                }
+                sendLines(receivers, settings.card.lines, context.placeholders, context.componentPlaceholders)
+            }
+            return
+        }
         if (!killer.hasPermission(Permissions.CARD_VIP) && !killer.hasPermission(Permissions.CARD_SVIP)) return
         val receivers = when (settings.card.mode.lowercase()) {
             "global" -> Bukkit.getOnlinePlayers().toList()
@@ -59,9 +80,9 @@ class BroadcastService(
         }
     }
 
-    private fun playerKillTemplate(killer: Player, context: DeathContext): String {
+    private fun playerKillTemplate(killer: Player, context: DeathContext, placeholders: MutableMap<String, String>): String {
         val theme = themes.firstAvailable(killer, storage.profile(killer.uniqueId, killer.name).selectedTheme)
-        context.placeholders["theme"] = theme.displayName
+        placeholders["theme"] = theme.displayName
         val profile = storage.profile(killer.uniqueId, killer.name)
         return if (
             settings.custom.useAsThemeMessage &&

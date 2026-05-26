@@ -16,6 +16,11 @@ data class WeaponDisplay(
 class WeaponNameService(private val messages: MessageService) {
     private val legacySerializer = LegacyComponentSerializer.legacySection()
 
+    fun unknown(): WeaponDisplay {
+        val fallback = messages.raw("unknown-weapon")
+        return WeaponDisplay(fallback, Component.text(fallback))
+    }
+
     fun heldItemName(item: ItemStack?): WeaponDisplay {
         if (item == null || item.type == Material.AIR) {
             val fallback = messages.raw("bare-hand")

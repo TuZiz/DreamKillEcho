@@ -4,6 +4,7 @@ import org.bukkit.command.CommandSender
 import ym.dreamkillecho.command.CommandContext
 import ym.dreamkillecho.command.CommandUtil
 import ym.dreamkillecho.command.SubCommand
+import ym.dreamkillecho.util.Permissions
 
 class ThemeCommand : SubCommand {
     override val names: Set<String> = setOf("theme")
@@ -14,14 +15,15 @@ class ThemeCommand : SubCommand {
             "list", null -> listThemes(player, context)
             "set" -> setTheme(player, args.getOrNull(1), context)
             "preview" -> preview(player, args.getOrNull(1), context)
+            "gui", "menu", "open" -> openMenu(player, context)
             else -> context.services.messages.send(player, "theme-not-found")
         }
         return true
     }
 
     override fun tab(sender: CommandSender, args: List<String>, context: CommandContext): List<String> {
-        if (args.size == 1) return listOf("list", "set", "preview").filter { it.startsWith(args[0], true) }
-        if (args.size == 2 && args[0].equals("set", true) || args.size == 2 && args[0].equals("preview", true)) {
+        if (args.size == 1) return listOf("list", "set", "preview", "gui", "menu", "open").filter { it.startsWith(args[0], true) }
+        if (args.size == 2 && (args[0].equals("set", true) || args[0].equals("preview", true))) {
             return context.services.themes.all().map { it.id }.filter { it.startsWith(args[1], true) }
         }
         return emptyList()
@@ -38,6 +40,14 @@ class ThemeCommand : SubCommand {
         }
     }
 
+    private fun openMenu(player: org.bukkit.entity.Player, context: CommandContext) {
+        if (!player.hasPermission(Permissions.USE)) {
+            CommandUtil.deny(player, context.services)
+            return
+        }
+        context.services.themeMenu.open(player)
+    }
+
     private fun setTheme(player: org.bukkit.entity.Player, id: String?, context: CommandContext) {
         val theme = id?.let { context.services.themes.require(it) }
         if (theme == null) {
@@ -48,8 +58,7 @@ class ThemeCommand : SubCommand {
             context.services.messages.send(player, "theme-no-permission")
             return
         }
-        context.services.storage.profile(player.uniqueId, player.name).selectedTheme = theme.id
-        context.services.storage.markProfileDirty(player.uniqueId)
+        context.services.themes.select(player, theme, context.services.storage)
         context.services.messages.send(player, "theme-set-success", mapOf("theme" to theme.displayName))
     }
 

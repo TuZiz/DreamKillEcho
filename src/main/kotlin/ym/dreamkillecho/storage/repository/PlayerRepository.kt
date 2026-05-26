@@ -23,6 +23,17 @@ class PlayerRepository {
         return null
     }
 
+    fun pendingCustomMessages(connection: Connection): List<PlayerProfile> {
+        connection.prepareStatement("SELECT * FROM players WHERE custom_message_status=? ORDER BY custom_message_updated_at DESC").use { ps ->
+            ps.setString(1, CustomMessageStatus.PENDING.name)
+            ps.executeQuery().use { rs ->
+                val result = mutableListOf<PlayerProfile>()
+                while (rs.next()) result += read(rs)
+                return result
+            }
+        }
+    }
+
     fun save(connection: Connection, profile: PlayerProfile) {
         connection.prepareStatement("REPLACE INTO players(uuid,name,selected_theme,custom_message,custom_message_status,custom_message_updated_at,receive_broadcast,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)").use { ps ->
             ps.setString(1, profile.uuid.toString())

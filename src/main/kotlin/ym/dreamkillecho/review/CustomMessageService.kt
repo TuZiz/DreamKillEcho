@@ -6,6 +6,7 @@ import ym.dreamkillecho.storage.CustomMessageStatus
 import ym.dreamkillecho.storage.PlayerProfile
 import ym.dreamkillecho.storage.StorageService
 import ym.dreamkillecho.util.PerKeyCooldown
+import java.util.concurrent.CompletableFuture
 
 enum class CustomMessageResult {
     SAVED, PENDING, COOLDOWN, TOO_LONG, BLOCKED_WORD, INVALID_TAG
@@ -41,6 +42,10 @@ class CustomMessageService(
     fun pending(): List<PlayerProfile> {
         return storage.cachedProfiles().filter { it.customMessageStatus == CustomMessageStatus.PENDING }
             .sortedByDescending { it.customMessageUpdatedAt }
+    }
+
+    fun pendingAsync(): CompletableFuture<List<PlayerProfile>> {
+        return storage.pendingCustomMessagesAsync()
     }
 
     fun approve(profile: PlayerProfile): Boolean {

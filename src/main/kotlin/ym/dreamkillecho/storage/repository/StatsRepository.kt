@@ -1,6 +1,7 @@
 package ym.dreamkillecho.storage.repository
 
 import ym.dreamkillecho.storage.PlayerStats
+import ym.dreamkillecho.storage.LeaderboardRow
 import java.sql.Connection
 import java.sql.ResultSet
 import java.util.UUID
@@ -28,15 +29,39 @@ class StatsRepository {
         }
     }
 
-    fun top(connection: Connection, column: String, limit: Int): List<PlayerStats> {
-        connection.prepareStatement("SELECT * FROM stats ORDER BY $column DESC LIMIT ?").use { ps ->
+    fun top(connection: Connection, column: String, limit: Int): List<LeaderboardRow> {
+        connection.prepareStatement(
+            """
+            SELECT s.uuid,
+                   COALESCE(NULLIF(p.name, ''), s.uuid) AS player_name,
+                   s.kills,
+                   s.deaths,
+                   s.current_streak,
+                   s.max_streak
+            FROM stats s
+            LEFT JOIN players p ON p.uuid = s.uuid
+            ORDER BY s.$column DESC, s.updated_at DESC
+            LIMIT ?
+            """.trimIndent()
+        ).use { ps ->
             ps.setInt(1, limit)
             ps.executeQuery().use { rs ->
-                val result = mutableListOf<PlayerStats>()
-                while (rs.next()) result += read(rs)
+                val result = mutableListOf<LeaderboardRow>()
+                while (rs.next()) result += readLeaderboard(rs)
                 return result
             }
         }
+    }
+
+    private fun readLeaderboard(rs: ResultSet): LeaderboardRow {
+        return LeaderboardRow(
+            uuid = UUID.fromString(rs.getString("uuid")),
+            name = rs.getString("player_name") ?: rs.getString("uuid"),
+            kills = rs.getInt("kills"),
+            deaths = rs.getInt("deaths"),
+            currentStreak = rs.getInt("current_streak"),
+            maxStreak = rs.getInt("max_streak")
+        )
     }
 
     private fun read(rs: ResultSet): PlayerStats {

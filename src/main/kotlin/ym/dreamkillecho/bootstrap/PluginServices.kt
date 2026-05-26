@@ -7,6 +7,7 @@ import ym.dreamkillecho.death.BroadcastService
 import ym.dreamkillecho.death.DeathAnalyzer
 import ym.dreamkillecho.death.WeaponNameService
 import ym.dreamkillecho.effect.EffectService
+import ym.dreamkillecho.gui.ThemeMenuService
 import ym.dreamkillecho.message.MessageService
 import ym.dreamkillecho.review.CustomMessageService
 import ym.dreamkillecho.scheduler.SchedulerAdapter
@@ -20,6 +21,7 @@ class PluginServices(
     val messages: MessageService,
     val storage: StorageService,
     val themes: ThemeService,
+    val themeMenu: ThemeMenuService,
     val deathAnalyzer: DeathAnalyzer,
     val antiAbuse: AntiAbuseService,
     val broadcast: BroadcastService,
@@ -45,12 +47,13 @@ class PluginServices(
             storage: StorageService
         ): PluginServices {
             val themes = ThemeService(plugin, config.themes)
-            val analyzer = DeathAnalyzer(messages, WeaponNameService(messages))
+            val themeMenu = ThemeMenuService(plugin, scheduler, messages, themes, storage)
+            val analyzer = DeathAnalyzer(messages, WeaponNameService(messages), scheduler.platformName)
             val antiAbuse = AntiAbuseService(config.settings)
             val broadcast = BroadcastService(scheduler, config.settings, messages, themes, storage)
             val effects = EffectService(scheduler, messages, config.settings)
             val custom = CustomMessageService(config.settings.custom, storage)
-            return PluginServices(plugin, scheduler, config, messages, storage, themes, analyzer, antiAbuse, broadcast, effects, custom)
+            return PluginServices(plugin, scheduler, config, messages, storage, themes, themeMenu, analyzer, antiAbuse, broadcast, effects, custom)
         }
     }
 }

@@ -59,13 +59,14 @@ data class EffectSettings(
     val sound: SoundSettings,
     val particle: ParticleSettings,
     val firework: FireworkSettings,
-    val bossbar: TemplateToggle
+    val bossbar: BossBarSettings
 )
 
 data class TemplateToggle(val enabled: Boolean, val message: String)
 data class SoundSettings(val enabled: Boolean, val name: String, val volume: Float, val pitch: Float)
 data class ParticleSettings(val enabled: Boolean, val name: String, val count: Int, val maxCount: Int)
 data class FireworkSettings(val enabled: Boolean, val maxPerKill: Int)
+data class BossBarSettings(val enabled: Boolean, val message: String, val seconds: Int)
 
 data class CustomMessageSettings(
     val maxLength: Int,

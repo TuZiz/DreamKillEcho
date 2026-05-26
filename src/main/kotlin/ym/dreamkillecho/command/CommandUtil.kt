@@ -23,7 +23,9 @@ object CommandUtil {
     fun findProfile(target: String?, services: PluginServices): PlayerProfile? {
         return target?.let { name ->
             services.storage.cachedProfiles().firstOrNull { it.name.equals(name, true) }
-                ?: runCatching { services.storage.profile(UUID.fromString(name)) }.getOrNull()
+                ?: runCatching { UUID.fromString(name) }.getOrNull()?.let { uuid ->
+                    services.storage.cachedProfiles().firstOrNull { it.uuid == uuid }
+                }
         }
     }
 

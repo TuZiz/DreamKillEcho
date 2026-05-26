@@ -79,9 +79,10 @@ class ConfigService private constructor(
                         yaml.getBoolean("effects.firework.enabled", false),
                         yaml.getInt("effects.firework.max-per-kill", 1)
                     ),
-                    bossbar = TemplateToggle(
+                    bossbar = BossBarSettings(
                         yaml.getBoolean("effects.bossbar.enabled", false),
-                        yaml.getString("effects.bossbar.message", "")!!
+                        yaml.getString("effects.bossbar.message", "")!!,
+                        yaml.getInt("effects.bossbar.seconds", 5).coerceAtLeast(1)
                     )
                 ),
                 custom = CustomMessageSettings(

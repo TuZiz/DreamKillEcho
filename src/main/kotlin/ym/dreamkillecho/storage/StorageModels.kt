@@ -29,6 +29,15 @@ data class PlayerStats(
     var updatedAt: Long = System.currentTimeMillis()
 )
 
+data class LeaderboardRow(
+    val uuid: UUID,
+    val name: String,
+    val kills: Int,
+    val deaths: Int,
+    val currentStreak: Int,
+    val maxStreak: Int
+)
+
 data class KillLog(
     val killerUuid: UUID?,
     val victimUuid: UUID,

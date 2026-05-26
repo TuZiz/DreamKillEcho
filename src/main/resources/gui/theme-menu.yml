@@ -1,0 +1,83 @@
+# 击杀播报主题 GUI 配置。
+# 首次启动会释放到 plugins/DreamKillEcho/gui/theme-menu.yml。
+# 修改后执行 /dke reload 生效；插件不会在运行时覆盖你的注释和美化内容。
+#
+# 支持 MiniMessage 颜色格式和以下占位符：
+# <player>   打开菜单的玩家名
+# <current>  当前实际生效的主题显示名
+# <total>    主题总数
+# <unlocked> 玩家已解锁主题数
+# <theme>    主题 ID
+# <display>  主题显示名
+# <permission> 主题权限节点
+# <priority> 主题自动选择优先级
+# <status>  当前使用 / 已解锁 / 未解锁
+
+title: "<gradient:#8ec5ff:#e0c3fc><b>击杀播报主题</b></gradient> <dark_gray>(</dark_gray><#a8e6cf><unlocked></#a8e6cf><gray>/</gray><white><total></white><dark_gray>)</dark_gray>"
+
+# 菜单大小必须是 9 的倍数，范围 9 - 54。
+size: 27
+
+# 主题物品会按 themes.yml 的 priority 从高到低填入这些槽位。
+# 如果你增加了更多主题，可以扩大 size 并补充更多槽位。
+theme-slots:
+  - 10
+  - 11
+  - 12
+  - 13
+  - 14
+  - 15
+  - 16
+
+# true：点击可用主题后关闭菜单。
+# false：点击后保持菜单打开并刷新当前选择状态。
+close-on-select: true
+
+status:
+  selected: "<#ffd966>当前使用</#ffd966>"
+  available: "<#a8e6cf>已解锁</#a8e6cf>"
+  locked: "<#ff6b6b>未解锁</#ff6b6b>"
+
+fill:
+  material: "BLACK_STAINED_GLASS_PANE"
+  amount: 1
+  name: " "
+  lore: []
+  glow: false
+
+items:
+  available:
+    material: "LIME_DYE"
+    amount: 1
+    name: "<#a8e6cf><b><display></b></#a8e6cf>"
+    lore:
+      - "<dark_gray>▪</dark_gray> <gray>状态: <status></gray>"
+      - "<dark_gray>▪</dark_gray> <gray>权限: <white><permission></white></gray>"
+      - "<dark_gray>▪</dark_gray> <gray>优先级: <white><priority></white></gray>"
+      - ""
+      - "<#a8e6cf>点击切换到这个播报主题</#a8e6cf>"
+    glow: false
+
+  selected:
+    material: "NETHER_STAR"
+    amount: 1
+    name: "<#ffd966><b><display></b></#ffd966> <#a8e6cf>[当前]</#a8e6cf>"
+    lore:
+      - "<dark_gray>▪</dark_gray> <gray>状态: <status></gray>"
+      - "<dark_gray>▪</dark_gray> <gray>权限: <white><permission></white></gray>"
+      - "<dark_gray>▪</dark_gray> <gray>优先级: <white><priority></white></gray>"
+      - ""
+      - "<gray>你当前正在使用这个播报主题。</gray>"
+    glow: true
+
+  locked:
+    material: "GRAY_DYE"
+    amount: 1
+    name: "<#ff6b6b><b><display></b></#ff6b6b>"
+    lore:
+      - "<dark_gray>▪</dark_gray> <gray>状态: <status></gray>"
+      - "<dark_gray>▪</dark_gray> <gray>需要权限: <white><permission></white></gray>"
+      - "<dark_gray>▪</dark_gray> <gray>优先级: <white><priority></white></gray>"
+      - ""
+      - "<#ff6b6b>你尚未解锁该播报主题</#ff6b6b>"
+    glow: false

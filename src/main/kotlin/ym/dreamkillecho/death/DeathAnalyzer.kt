@@ -11,26 +11,33 @@ import kotlin.math.roundToInt
 
 class DeathAnalyzer(
     private val messages: MessageService,
-    private val weaponNames: WeaponNameService
+    private val weaponNames: WeaponNameService,
+    platformName: String
 ) {
+    private val foliaMode = platformName.contains("Folia", ignoreCase = true)
+
     fun analyze(event: PlayerDeathEvent): DeathContext {
         val victim = event.entity
         val damage = victim.lastDamageCause
         val killer = findKiller(victim, damage)
         val mobName = findMobName(damage)
         val weapon = findWeapon(killer, damage)
-        val distance = if (killer != null && killer.world == victim.world) killer.location.distance(victim.location) else 0.0
+        val distance = if (!foliaMode && killer != null && killer.world == victim.world) killer.location.distance(victim.location) else 0.0
         val cause = mapCause(damage?.cause)
         return DeathContext(
             victim = victim,
             killer = killer,
+            victimName = victim.name,
+            killerName = killer?.name,
             mobName = mobName,
             weapon = weapon.fallbackText,
             world = victim.world.name,
             deathCause = cause,
             broadcastKey = if (killer != null) "player" else if (cause == "projectile") "projectile" else if (mobName != null) "mob" else cause,
             distance = distance,
-            killerIp = killer?.address?.address?.hostAddress,
+            victimHealth = victim.health,
+            killerHealth = if (!foliaMode) killer?.health else null,
+            killerIp = if (!foliaMode) killer?.address?.address?.hostAddress else null,
             victimIp = victim.address?.address?.hostAddress,
             componentPlaceholders = linkedMapOf("weapon" to weapon.component)
         )
@@ -64,6 +71,9 @@ class DeathAnalyzer(
         if (damage is EntityDamageByEntityEvent && damage.damager is Projectile) {
             return weaponNames.projectileName(damage.damager as Projectile)
         }
+        if (foliaMode && killer != null) {
+            return weaponNames.unknown()
+        }
         return weaponNames.heldItemName(killer?.inventory?.itemInMainHand)
     }
 
@@ -92,15 +102,14 @@ class DeathAnalyzer(
     }
 
     fun fillPlaceholders(context: DeathContext, streak: Int, maxStreak: Int, prefix: String, theme: String, server: String) {
-        val killer = context.killer
         context.placeholders += mapOf(
-            "killer" to (killer?.name ?: messages.raw("unknown-player")),
-            "victim" to context.victim.name,
+            "killer" to (context.killerName ?: messages.raw("unknown-player")),
+            "victim" to context.victimName,
             "mob" to (context.mobName ?: messages.raw("unknown-player")),
             "weapon" to context.weapon,
             "world" to context.world,
-            "killer_health" to formatHealth(killer?.health ?: 0.0),
-            "victim_health" to formatHealth(context.victim.health),
+            "killer_health" to formatHealth(context.killerHealth ?: 0.0),
+            "victim_health" to formatHealth(context.victimHealth),
             "distance" to "%.1f".format(context.distance),
             "streak" to streak.toString(),
             "max_streak" to maxStreak.toString(),

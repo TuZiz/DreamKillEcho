@@ -18,7 +18,7 @@ class ReloadCommand : SubCommand {
         if (!sender.hasPermission(Permissions.ADMIN_RELOAD)) return CommandUtil.deny(sender, old)
         old.scheduler.runAsync {
             try {
-                Resources.ensureDefaults(context.plugin, listOf("config.yml", "lang/zh_cn.yml", "lang/en_us.yml", "themes.yml", "storage.yml"))
+                Resources.ensureDefaults(context.plugin, listOf("config.yml", "lang/zh_cn.yml", "lang/en_us.yml", "themes.yml", "storage.yml", "gui/theme-menu.yml"))
                 val loaded = ConfigService.load(context.plugin)
                 if (loaded.storage.type != old.config.storage.type) {
                     context.plugin.logger.warning("[DreamKillEcho] storage.type changed in reload; active connection keeps old type until restart.")

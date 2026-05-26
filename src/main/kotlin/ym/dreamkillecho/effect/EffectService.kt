@@ -49,7 +49,7 @@ class EffectService(
             }
             if (settings.effects.bossbar.enabled && killer.hasPermission(Permissions.EFFECT_BOSSBAR)) {
                 val bar = messages.showBossBar(killer, settings.effects.bossbar.message, context.placeholders, context.componentPlaceholders)
-                scheduler.runLater(100L) {
+                scheduler.runLater(settings.effects.bossbar.seconds.coerceAtLeast(1).toLong() * 20L) {
                     scheduler.runEntity(killer) { messages.hideBossBar(killer, bar) }
                 }
             }

@@ -13,6 +13,7 @@ DreamKillEcho 是一个 Kotlin + Maven 编写的 Minecraft 击杀播报 / 死亡
 - 防刷屏 / 防刷击杀：同击杀者、同受害者、每分钟广播与特效限流、同受害者反复击杀限制。
 - 世界限制：blacklist / whitelist，可分别控制播报、统计、特效。
 - 玩家开关：`/dke toggle` 持久化关闭接收普通播报。
+- GUI 主题仓库：`/dke gui` 或 `/dke theme gui` 打开可美化菜单，点击切换击杀播报主题。
 - SQLite 默认存储，MySQL 可选，HikariCP 连接池。
 - PlaceholderAPI softdepend，存在时通过反射解析占位符。
 
@@ -26,7 +27,7 @@ Folia 兼容通过 `SchedulerAdapter` 运行时检测完成，业务代码禁止
 
 1. 执行 `mvn clean package`。
 2. 将 `target/DreamKillEcho-1.0.0.jar` 放入服务器 `plugins` 目录。
-3. 启动服务器，修改生成的 `config.yml`、`themes.yml`、`lang/zh_cn.yml`、`lang/en_us.yml`、`storage.yml`。
+3. 启动服务器，修改生成的 `config.yml`、`themes.yml`、`gui/theme-menu.yml`、`lang/zh_cn.yml`、`lang/en_us.yml`、`storage.yml`。
 4. 使用 `/dke reload` 热重载非存储连接类型配置。修改 `storage.type` 后需要重启。
 
 ## Maven 构建
@@ -42,7 +43,9 @@ mvn clean package
 - `/dreamkillecho help`，别名 `/dke`、`/killecho`
 - `/dke reload`
 - `/dke toggle`
+- `/dke gui`
 - `/dke theme list`
+- `/dke theme gui`
 - `/dke theme set <theme>`
 - `/dke theme preview <theme>`
 - `/dke custom set <message>`
@@ -63,13 +66,13 @@ mvn clean package
 
 - `dreamkillecho.use`
 - `dreamkillecho.toggle`
-- `dreamkillecho.default`
-- `dreamkillecho.vip`
-- `dreamkillecho.vipplus`
-- `dreamkillecho.mvp`
-- `dreamkillecho.mvpplus`
-- `dreamkillecho.svip`
-- `dreamkillecho.love`
+- `dreamkillecho.theme.default`
+- `dreamkillecho.theme.vip`
+- `dreamkillecho.theme.vipplus`
+- `dreamkillecho.theme.mvp`
+- `dreamkillecho.theme.mvpplus`
+- `dreamkillecho.theme.svip`
+- `dreamkillecho.theme.love`
 - `dreamkillecho.effect.title`
 - `dreamkillecho.effect.actionbar`
 - `dreamkillecho.effect.sound`
@@ -90,8 +93,10 @@ mvn clean package
 ## 配置说明
 
 - `config.yml`：世界限制、广播范围、名片、特效、连杀、防刷、刷新周期。
+- `effects.bossbar.seconds`：BossBar 展示秒数，最小值为 1，默认 5。
 - `lang/zh_cn.yml` / `lang/en_us.yml`：所有可见消息。`config.yml` 中的 `language.default` 优先读取，缺失 key 时回退 `language.fallback`。
 - `themes.yml`：击杀主题、展示名、权限、自动选择优先级 `priority`、MiniMessage 模板。`priority` 越高，玩家未手动选择主题时越优先自动使用。
+- `gui/theme-menu.yml`：主题仓库 GUI 的标题、大小、主题槽位、背景填充、已解锁/当前/未解锁物品样式。修改后执行 `/dke reload` 生效。
 - `storage.yml`：SQLite / MySQL 连接配置。
 
 ## 主题占位符
@@ -157,8 +162,9 @@ mysql:
 ## 常见问题
 
 - 修改主题后没生效：执行 `/dke reload`。
+- 修改 GUI 后没生效：确认修改的是 `plugins/DreamKillEcho/gui/theme-menu.yml`，然后执行 `/dke reload`。
 - 修改 `storage.type` 后没切换：存储连接池不会热切换，需要重启。
-- 玩家看不到主题：检查 LuckPerms 是否发放对应 `dreamkillecho.<theme>` 权限。默认会员主题节点为 `dreamkillecho.vip`、`dreamkillecho.vipplus`、`dreamkillecho.mvp`、`dreamkillecho.mvpplus`、`dreamkillecho.svip`，额外个性主题为 `dreamkillecho.love`。
+- 玩家看不到主题：检查 LuckPerms 是否发放对应 `dreamkillecho.theme.<theme>` 权限。默认会员主题节点为 `dreamkillecho.theme.vip`、`dreamkillecho.theme.vipplus`、`dreamkillecho.theme.mvp`、`dreamkillecho.theme.mvpplus`、`dreamkillecho.theme.svip`，额外个性主题为 `dreamkillecho.theme.love`。
 - 自定义击杀语未显示：默认需要审核，通过 `/dke approve <player>`。
 
 ## Folia 注意事项
@@ -167,4 +173,4 @@ mysql:
 
 ## TODO
 
-- 第一版已实现核心可运行链路。后续可增强为更细粒度的死亡原因文案表、更多特效模板、离线玩家审核查询与单元测试覆盖。
+- 第一版已实现核心可运行链路。后续可增强为更细粒度的死亡原因文案表、更多特效模板与单元测试覆盖。

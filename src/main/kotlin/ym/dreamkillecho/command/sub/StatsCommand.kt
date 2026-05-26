@@ -53,9 +53,12 @@ class StatsCommand : SubCommand {
         context.services.storage.topStats(type ?: "kills", 10).thenAccept { rows ->
             val sendTask = {
                 rows.forEachIndexed { index, row ->
-                    val profile = context.services.storage.profile(row.uuid)
                     val value = if (type.equals("streak", true)) row.maxStreak else row.kills
-                    context.services.messages.send(sender, "top-format", mapOf("rank" to (index + 1).toString(), "player" to profile.name, "value" to value.toString()))
+                    context.services.messages.send(
+                        sender,
+                        "top-format",
+                        mapOf("rank" to (index + 1).toString(), "player" to row.name, "value" to value.toString())
+                    )
                 }
             }
             if (sender is Player) context.services.scheduler.runEntity(sender, sendTask) else context.services.scheduler.runMain(sendTask)
