@@ -13,7 +13,7 @@ DreamKillEcho 是一个 Kotlin + Maven 编写的 Minecraft 击杀播报 / 死亡
 - 防刷屏 / 防刷击杀：同击杀者、同受害者、每分钟广播与特效限流、同受害者反复击杀限制。
 - 世界限制：blacklist / whitelist，可分别控制播报、统计、特效。
 - 玩家开关：`/dke toggle` 持久化关闭接收普通播报。
-- GUI 主题仓库：`/dke gui` 或 `/dke theme gui` 打开可美化菜单，点击切换击杀播报主题。
+- GUI 主题仓库：`/dke gui` 或 `/dke theme gui` 打开可美化菜单，主题列表按 `themes.yml` 自动分页，新增主题无需同步改按钮位。
 - SQLite 默认存储，MySQL 可选，HikariCP 连接池。
 - PlaceholderAPI softdepend，存在时通过反射解析占位符。
 
@@ -96,7 +96,7 @@ mvn clean package
 - `effects.bossbar.seconds`：BossBar 展示秒数，最小值为 1，默认 5。
 - `lang/zh_cn.yml` / `lang/en_us.yml`：所有可见消息。`config.yml` 中的 `language.default` 优先读取，缺失 key 时回退 `language.fallback`。
 - `themes.yml`：击杀主题、展示名、权限、自动选择优先级 `priority`、MiniMessage 模板。`priority` 越高，玩家未手动选择主题时越优先自动使用。
-- `gui/theme-menu.yml`：主题仓库 GUI 的标题、大小、主题槽位、背景填充、已解锁/当前/未解锁物品样式。修改后执行 `/dke reload` 生效。
+- `gui/theme-menu.yml`：主题仓库 GUI 的标题、`GuiPlain` 布局、`GuiKey` 物品样式、`templates` 主题物品模板。`@` 会自动承载 `themes.yml` 中的主题列表，新增主题通常不需要再改这个文件；修改后执行 `/dke reload` 生效。
 - `storage.yml`：SQLite / MySQL 连接配置。
 
 ## 主题占位符
@@ -162,7 +162,7 @@ mysql:
 ## 常见问题
 
 - 修改主题后没生效：执行 `/dke reload`。
-- 修改 GUI 后没生效：确认修改的是 `plugins/DreamKillEcho/gui/theme-menu.yml`，然后执行 `/dke reload`。
+- 修改 GUI 后没生效：确认修改的是 `plugins/DreamKillEcho/gui/theme-menu.yml`，并且 `GuiPlain`、`GuiKey`、`templates` 的字符与函数定义正确；如果只是新增主题，一般只需要改 `themes.yml`，然后执行 `/dke reload`。
 - 修改 `storage.type` 后没切换：存储连接池不会热切换，需要重启。
 - 玩家看不到主题：检查 LuckPerms 是否发放对应 `dreamkillecho.theme.<theme>` 权限。默认会员主题节点为 `dreamkillecho.theme.vip`、`dreamkillecho.theme.vipplus`、`dreamkillecho.theme.mvp`、`dreamkillecho.theme.mvpplus`、`dreamkillecho.theme.svip`，额外个性主题为 `dreamkillecho.theme.love`。
 - 自定义击杀语未显示：默认需要审核，通过 `/dke approve <player>`。

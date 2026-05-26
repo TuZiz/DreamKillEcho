@@ -15,9 +15,16 @@ class ThemeMenuListener(private val plugin: DreamKillEcho) : Listener {
         val player = event.whoClicked as? Player ?: return
         val topSize = event.view.topInventory.size
         if (event.rawSlot !in 0 until topSize) return
-        val themeId = holder.themeId(event.rawSlot) ?: return
-        val services = plugin.services ?: return
-        services.themeMenu.select(player, themeId)
+        when (holder.action(event.rawSlot)) {
+            ThemeMenuAction.PREVIOUS_PAGE -> plugin.services?.themeMenu?.open(player, holder.page - 1)
+            ThemeMenuAction.NEXT_PAGE -> plugin.services?.themeMenu?.open(player, holder.page + 1)
+            ThemeMenuAction.CLOSE -> player.closeInventory()
+            null -> {
+                val services = plugin.services ?: return
+                val themeId = holder.themeId(event.rawSlot) ?: return
+                services.themeMenu.select(player, themeId, holder.page)
+            }
+        }
     }
 
     @EventHandler

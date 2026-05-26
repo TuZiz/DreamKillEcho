@@ -1,83 +1,111 @@
-# 击杀播报主题 GUI 配置。
-# 首次启动会释放到 plugins/DreamKillEcho/gui/theme-menu.yml。
-# 修改后执行 /dke reload 生效；插件不会在运行时覆盖你的注释和美化内容。
-#
-# 支持 MiniMessage 颜色格式和以下占位符：
-# <player>   打开菜单的玩家名
-# <current>  当前实际生效的主题显示名
-# <total>    主题总数
-# <unlocked> 玩家已解锁主题数
-# <theme>    主题 ID
-# <display>  主题显示名
-# <permission> 主题权限节点
-# <priority> 主题自动选择优先级
-# <status>  当前使用 / 已解锁 / 未解锁
+# =========================================================
+# 击杀播报主题仓库 GUI
+# 写法参考 UpTags: Title + GuiPlain + GuiKey + templates。
+# @ 是自动分页内容位，会按 themes.yml 的主题列表自动填充。
+# 新增击杀播报主题时，只需要修改 themes.yml 与权限，不需要同步修改本文件。
+# =========================================================
 
-title: "<gradient:#8ec5ff:#e0c3fc><b>击杀播报主题</b></gradient> <dark_gray>(</dark_gray><#a8e6cf><unlocked></#a8e6cf><gray>/</gray><white><total></white><dark_gray>)</dark_gray>"
+Title: "&#38BDF8&l✦ &#7DD3FC&l击杀播报主题 &#94A3B8| &#E2E8F0进度: &#A7F3D0%unlocked%&#94A3B8/&#E2E8F0%total%"
 
-# 菜单大小必须是 9 的倍数，范围 9 - 54。
-size: 27
+GuiPlain:
+  - "X#######X"
+  - "#@@@@@@@#"
+  - "#@@@@@@@#"
+  - "#@@@@@@@#"
+  - "#@@@@@@@#"
+  - "L###B###N"
 
-# 主题物品会按 themes.yml 的 priority 从高到低填入这些槽位。
-# 如果你增加了更多主题，可以扩大 size 并补充更多槽位。
-theme-slots:
-  - 10
-  - 11
-  - 12
-  - 13
-  - 14
-  - 15
-  - 16
+GuiKey:
+  "@":
+    IconFunction: "item"
 
-# true：点击可用主题后关闭菜单。
-# false：点击后保持菜单打开并刷新当前选择状态。
-close-on-select: true
+  "#":
+    Material: "BLACK_STAINED_GLASS_PANE"
+    Name: "&f"
 
-status:
-  selected: "<#ffd966>当前使用</#ffd966>"
-  available: "<#a8e6cf>已解锁</#a8e6cf>"
-  locked: "<#ff6b6b>未解锁</#ff6b6b>"
+  "X":
+    Material: "CYAN_STAINED_GLASS_PANE" # 四角换成青色玻璃板，呼应标题色调
+    Name: "&f"
 
-fill:
-  material: "BLACK_STAINED_GLASS_PANE"
-  amount: 1
-  name: " "
-  lore: []
-  glow: false
-
-items:
-  available:
-    material: "LIME_DYE"
-    amount: 1
-    name: "<#a8e6cf><b><display></b></#a8e6cf>"
-    lore:
-      - "<dark_gray>▪</dark_gray> <gray>状态: <status></gray>"
-      - "<dark_gray>▪</dark_gray> <gray>权限: <white><permission></white></gray>"
-      - "<dark_gray>▪</dark_gray> <gray>优先级: <white><priority></white></gray>"
+  "B":
+    IconFunction: "back"
+    Material: "BARRIER"
+    Name: "&#F87171&l[✖] &c关闭仓库"
+    Lore:
       - ""
-      - "<#a8e6cf>点击切换到这个播报主题</#a8e6cf>"
-    glow: false
+      - "&#94A3B8▪ &#E2E8F0当前使用: &#FDE047%current_theme%"
+      - ""
+      - "&#F87171 ➦ 点击即可关闭菜单"
 
-  selected:
+  "L":
+    IconFunction: "last"
+    has:
+      Material: "ARROW"
+      Name: "&#FDE047&l[◂] &e上一页"
+      Lore:
+        - ""
+        - "&#94A3B8▪ &#E2E8F0当前进度: &#38BDF8%page% &#94A3B8/ &#38BDF8%pages%"
+        - ""
+        - "&#FDE047 ➦ 点击返回上一页"
+    normal:
+      Material: "GRAY_STAINED_GLASS_PANE"
+      Name: "&#94A3B8&l[◂] &7已经是第一页"
+
+  "N":
+    IconFunction: "next"
+    has:
+      Material: "ARROW"
+      Name: "&#FDE047&l[▸] &e下一页"
+      Lore:
+        - ""
+        - "&#94A3B8▪ &#E2E8F0当前进度: &#38BDF8%page% &#94A3B8/ &#38BDF8%pages%"
+        - ""
+        - "&#FDE047 ➦ 点击前往下一页"
+    normal:
+      Material: "GRAY_STAINED_GLASS_PANE"
+      Name: "&#94A3B8&l[▸] &7已经是最后一页"
+
+CloseOnSelect: true
+
+Status:
+  Selected: "&#FDE047&l[当前使用]"
+  Available: "&#A7F3D0&l[已解锁]"
+  Locked: "&#F87171&l[未解锁]"
+
+templates:
+  theme-available:
+    material: "NAME_TAG" # 推荐换成 NAME_TAG (命名牌) 或 PAPER (纸)，比染料更有高级感
+    name: "&#A7F3D0&l%theme_display%"
+    lore:
+      - "&#475569&m                               "
+      - "&#94A3B8▪ &#E2E8F0主题 ID: &#A7F3D0%theme_id%"
+      - "&#94A3B8▪ &#E2E8F0解锁权限: &#A7F3D0%theme_permission%"
+      - "&#94A3B8▪ &#E2E8F0优先等级: &#FDE047%theme_priority%"
+      - "&#94A3B8▪ &#E2E8F0当前状态: %theme_status%"
+      - "&#475569&m                               "
+      - "&#A7F3D0 ➦ 左键点击即可装备此主题"
+
+  theme-selected:
     material: "NETHER_STAR"
-    amount: 1
-    name: "<#ffd966><b><display></b></#ffd966> <#a8e6cf>[当前]</#a8e6cf>"
+    name: "&#FDE047&l%theme_display%"
     lore:
-      - "<dark_gray>▪</dark_gray> <gray>状态: <status></gray>"
-      - "<dark_gray>▪</dark_gray> <gray>权限: <white><permission></white></gray>"
-      - "<dark_gray>▪</dark_gray> <gray>优先级: <white><priority></white></gray>"
-      - ""
-      - "<gray>你当前正在使用这个播报主题。</gray>"
+      - "&#475569&m                               "
+      - "&#94A3B8▪ &#E2E8F0主题 ID: &#FDE047%theme_id%"
+      - "&#94A3B8▪ &#E2E8F0解锁权限: &#FDE047%theme_permission%"
+      - "&#94A3B8▪ &#E2E8F0优先等级: &#FDE047%theme_priority%"
+      - "&#94A3B8▪ &#E2E8F0当前状态: %theme_status%"
+      - "&#475569&m                               "
+      - "&#FDE047 ★ 你正在使用这个击杀播报主题"
     glow: true
 
-  locked:
-    material: "GRAY_DYE"
-    amount: 1
-    name: "<#ff6b6b><b><display></b></#ff6b6b>"
+  theme-locked:
+    material: "GRAY_DYE" # 也可考虑换成 MINECART (矿车) 或 IRON_BARS (铁栏杆) 强调锁定感
+    name: "&#94A3B8&l%theme_display%"
     lore:
-      - "<dark_gray>▪</dark_gray> <gray>状态: <status></gray>"
-      - "<dark_gray>▪</dark_gray> <gray>需要权限: <white><permission></white></gray>"
-      - "<dark_gray>▪</dark_gray> <gray>优先级: <white><priority></white></gray>"
-      - ""
-      - "<#ff6b6b>你尚未解锁该播报主题</#ff6b6b>"
-    glow: false
+      - "&#475569&m                               "
+      - "&#94A3B8▪ &#E2E8F0主题 ID: &#71717A%theme_id%"
+      - "&#94A3B8▪ &#E2E8F0所需权限: &#F87171%theme_permission%"
+      - "&#94A3B8▪ &#E2E8F0优先等级: &#71717A%theme_priority%"
+      - "&#94A3B8▪ &#E2E8F0当前状态: %theme_status%"
+      - "&#475569&m                               "
+      - "&#F87171 ✖ 你暂时还没有权限使用这个主题"

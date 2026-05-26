@@ -1,7 +1,7 @@
 package ym.dreamkillecho.gui
 
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
@@ -26,21 +26,31 @@ class ThemeMenuService(
     private val config: ThemeMenuConfig = ThemeMenuConfig.load(plugin)
     private val legacy = LegacyComponentSerializer.legacySection()
 
-    fun open(player: Player) {
+    fun open(player: Player, page: Int = 0) {
         scheduler.runEntity(player) {
-            player.openInventory(buildInventory(player))
+            if (!player.isOnline) return@runEntity
+            player.openInventory(buildInventory(player, page))
         }
     }
 
     fun refresh(player: Player) {
+        refresh(player, currentPage(player))
+    }
+
+    fun refresh(player: Player, page: Int) {
         scheduler.runLater(1L) {
             scheduler.runEntity(player) {
-                player.openInventory(buildInventory(player))
+                if (!player.isOnline) return@runEntity
+                player.openInventory(buildInventory(player, page))
             }
         }
     }
 
     fun select(player: Player, themeId: String) {
+        select(player, themeId, currentPage(player))
+    }
+
+    fun select(player: Player, themeId: String, page: Int) {
         val theme = themes.require(themeId)
         if (theme == null) {
             messages.send(player, "theme-not-found")
@@ -55,74 +65,128 @@ class ThemeMenuService(
         if (config.closeOnSelect) {
             player.closeInventory()
         } else {
-            refresh(player)
+            refresh(player, page)
         }
     }
 
-    private fun buildInventory(player: Player): Inventory {
+    private fun buildInventory(player: Player, requestedPage: Int): Inventory {
         val orderedThemes = themes.all()
         val profile = storage.profile(player.uniqueId, player.name)
         val currentTheme = themes.firstAvailable(player, profile.selectedTheme)
         val unlockedCount = orderedThemes.count { themes.isUnlocked(player, it) }
-        val titlePlaceholders = mapOf(
-            "player" to player.name,
-            "total" to orderedThemes.size.toString(),
-            "unlocked" to unlockedCount.toString()
+        val pageSize = config.pageSlots.size.coerceAtLeast(1)
+        val pageCount = pageCount(orderedThemes.size, pageSize)
+        val safePage = requestedPage.coerceIn(0, pageCount - 1)
+        val pageThemes = orderedThemes.drop(safePage * pageSize).take(pageSize)
+        val placeholders = placeholders(
+            player = player,
+            total = orderedThemes.size,
+            unlocked = unlockedCount,
+            page = safePage,
+            pages = pageCount,
+            pageSize = pageSize,
+            pageStart = if (orderedThemes.isEmpty()) 0 else (safePage * pageSize) + 1,
+            pageEnd = minOf((safePage * pageSize) + pageThemes.size, orderedThemes.size)
         )
         val title = render(
             config.title,
             player,
-            titlePlaceholders,
-            mapOf("current" to messages.component(currentTheme.displayName, player, titlePlaceholders))
+            placeholders,
+            mapOf(
+                "current" to messages.component(currentTheme.displayName, player, placeholders),
+                "current_theme" to messages.component(currentTheme.displayName, player, placeholders)
+            )
         )
-        val themeBySlot = buildThemeSlotMap(orderedThemes, currentTheme.id)
-        val holder = ThemeMenuHolder(themeBySlot)
+        val themeBySlot = linkedMapOf<Int, String>()
+        val actionBySlot = linkedMapOf<Int, ThemeMenuAction>()
+        val holder = ThemeMenuHolder(themeBySlot, actionBySlot, safePage)
         val inventory = Bukkit.createInventory(holder, config.size, title)
         holder.bind(inventory)
-        fillBackground(inventory, player, currentTheme, orderedThemes.size, unlockedCount)
-        for ((slot, themeId) in themeBySlot) {
-            val theme = themes.require(themeId) ?: continue
-            inventory.setItem(slot, buildThemeItem(player, theme, currentTheme, orderedThemes.size, unlockedCount))
-        }
+        fillStaticSlots(inventory, player, currentTheme, placeholders, safePage, pageCount, actionBySlot)
+        fillThemeSlots(inventory, player, safePage, pageThemes, currentTheme, placeholders, themeBySlot, pageCount)
         return inventory
     }
 
-    private fun buildThemeSlotMap(orderedThemes: List<KillTheme>, currentThemeId: String): Map<Int, String> {
-        val visibleThemes = orderedThemes.take(config.themeSlots.size).toMutableList()
-        if (visibleThemes.none { it.id == currentThemeId }) {
-            val currentTheme = orderedThemes.firstOrNull { it.id == currentThemeId }
-            if (currentTheme != null && visibleThemes.isNotEmpty()) {
-                visibleThemes[visibleThemes.lastIndex] = currentTheme
-            }
-        }
-        if (orderedThemes.size > config.themeSlots.size) {
-            plugin.logger.warning("[DreamKillEcho] Theme menu has ${orderedThemes.size} themes but only ${config.themeSlots.size} theme-slots.")
-        }
-        return visibleThemes
-            .mapIndexed { index, theme -> config.themeSlots[index] to theme.id }
-            .toMap()
-    }
-
-    private fun fillBackground(
+    private fun fillStaticSlots(
         inventory: Inventory,
         player: Player,
         currentTheme: KillTheme,
-        totalThemes: Int,
-        unlockedCount: Int
+        placeholders: Map<String, String>,
+        page: Int,
+        pageCount: Int,
+        actionBySlot: MutableMap<Int, ThemeMenuAction>
     ) {
-        val fillItem = buildItem(
-            config.fill,
-            player,
-            mapOf(
-                "player" to player.name,
-                "total" to totalThemes.toString(),
-                "unlocked" to unlockedCount.toString()
-            ),
-            mapOf("current" to messages.component(currentTheme.displayName, player)),
-            Material.BLACK_STAINED_GLASS_PANE
+        val staticComponents = mapOf(
+            "current" to messages.component(currentTheme.displayName, player, placeholders),
+            "current_theme" to messages.component(currentTheme.displayName, player, placeholders)
         )
-        for (slot in 0 until inventory.size) {
-            inventory.setItem(slot, fillItem.clone())
+        for (slot in config.staticSlots) {
+            val function = slot.key.iconFunction
+            val itemConfig = when {
+                function.equals("last", true) -> {
+                    if (page > 0) {
+                        actionBySlot[slot.slot] = ThemeMenuAction.PREVIOUS_PAGE
+                        slot.key.has ?: slot.key.base
+                    } else {
+                        slot.key.normal ?: slot.key.base
+                    }
+                }
+                function.equals("next", true) -> {
+                    if (page < pageCount - 1) {
+                        actionBySlot[slot.slot] = ThemeMenuAction.NEXT_PAGE
+                        slot.key.has ?: slot.key.base
+                    } else {
+                        slot.key.normal ?: slot.key.base
+                    }
+                }
+                function.equals("back", true) || function.equals("close", true) -> {
+                    actionBySlot[slot.slot] = ThemeMenuAction.CLOSE
+                    slot.key.base
+                }
+                else -> slot.key.base
+            } ?: continue
+            inventory.setItem(
+                slot.slot,
+                buildItem(
+                    itemConfig,
+                    player,
+                    placeholders,
+                    staticComponents,
+                    fallbackMaterial = Material.BLACK_STAINED_GLASS_PANE
+                )
+            )
+        }
+    }
+
+    private fun fillThemeSlots(
+        inventory: Inventory,
+        player: Player,
+        page: Int,
+        pageThemes: List<KillTheme>,
+        currentTheme: KillTheme,
+        placeholders: Map<String, String>,
+        themeBySlot: MutableMap<Int, String>,
+        pageCount: Int
+    ) {
+        val pageSize = config.pageSlots.size.coerceAtLeast(1)
+        for ((index, slot) in config.pageSlots.withIndex()) {
+            val theme = pageThemes.getOrNull(index)
+            if (theme == null) {
+                continue
+            }
+            themeBySlot[slot] = theme.id
+            inventory.setItem(
+                slot,
+                buildThemeItem(
+                    player = player,
+                    theme = theme,
+                    currentTheme = currentTheme,
+                    absoluteIndex = (page * pageSize) + index + 1,
+                    page = page,
+                    pageCount = pageCount,
+                    placeholders = placeholders
+                )
+            )
         }
     }
 
@@ -130,8 +194,10 @@ class ThemeMenuService(
         player: Player,
         theme: KillTheme,
         currentTheme: KillTheme,
-        totalThemes: Int,
-        unlockedCount: Int
+        absoluteIndex: Int,
+        page: Int,
+        pageCount: Int,
+        placeholders: Map<String, String>
     ): ItemStack {
         val unlocked = themes.isUnlocked(player, theme)
         val selected = unlocked && currentTheme.id == theme.id
@@ -145,20 +211,36 @@ class ThemeMenuService(
             unlocked -> config.availableStatus
             else -> config.lockedStatus
         }
-        val placeholders = mapOf(
+        val itemPlaceholders = placeholders + mapOf(
             "theme" to theme.id,
+            "theme_id" to theme.id,
+            "theme_display" to theme.displayName,
+            "theme_name" to theme.displayName,
             "permission" to theme.permission,
+            "theme_permission" to theme.permission,
             "priority" to theme.priority.toString(),
-            "player" to player.name,
-            "total" to totalThemes.toString(),
-            "unlocked" to unlockedCount.toString()
+            "theme_priority" to theme.priority.toString(),
+            "theme_status" to status,
+            "index" to absoluteIndex.toString(),
+            "page" to (page + 1).toString(),
+            "pages" to pageCount.toString()
         )
-        val components = mapOf(
-            "display" to messages.component(theme.displayName, player, placeholders),
-            "status" to messages.component(status, player, placeholders),
-            "current" to messages.component(currentTheme.displayName, player, placeholders)
+        val componentPlaceholders = mapOf(
+            "display" to messages.component(theme.displayName, player, itemPlaceholders),
+            "theme_display" to messages.component(theme.displayName, player, itemPlaceholders),
+            "theme_name" to messages.component(theme.displayName, player, itemPlaceholders),
+            "status" to messages.component(status, player, itemPlaceholders),
+            "theme_status" to messages.component(status, player, itemPlaceholders),
+            "current" to messages.component(currentTheme.displayName, player, itemPlaceholders),
+            "current_theme" to messages.component(currentTheme.displayName, player, itemPlaceholders)
         )
-        return buildItem(template, player, placeholders, components, if (unlocked) Material.LIME_DYE else Material.GRAY_DYE)
+        return buildItem(
+            template,
+            player,
+            itemPlaceholders,
+            componentPlaceholders,
+            if (unlocked) Material.LIME_DYE else Material.GRAY_DYE
+        )
     }
 
     private fun buildItem(
@@ -190,6 +272,77 @@ class ThemeMenuService(
         placeholders: Map<String, String>,
         componentPlaceholders: Map<String, Component> = emptyMap()
     ): String {
-        return legacy.serialize(messages.component(template, player, placeholders, componentPlaceholders))
+        val normalized = normalizeGuiText(template, placeholders.keys + componentPlaceholders.keys)
+        return legacy.serialize(messages.component(normalized, player, placeholders, componentPlaceholders))
+    }
+
+    private fun normalizeGuiText(template: String, placeholderNames: Set<String>): String {
+        var result = template.replace(Regex("%([A-Za-z0-9_.-]+)%")) { match ->
+            val key = match.groupValues[1]
+            if (key in placeholderNames) "<$key>" else match.value
+        }
+        result = result.replace(Regex("&#([A-Fa-f0-9]{6})")) { match -> "<#${match.groupValues[1]}>" }
+        return result.replace(Regex("&([0-9A-FK-ORa-fk-or])")) { match ->
+            legacyMiniMessageTag(match.groupValues[1][0])
+        }
+    }
+
+    private fun legacyMiniMessageTag(code: Char): String {
+        return when (code.lowercaseChar()) {
+            '0' -> "<black>"
+            '1' -> "<dark_blue>"
+            '2' -> "<dark_green>"
+            '3' -> "<dark_aqua>"
+            '4' -> "<dark_red>"
+            '5' -> "<dark_purple>"
+            '6' -> "<gold>"
+            '7' -> "<gray>"
+            '8' -> "<dark_gray>"
+            '9' -> "<blue>"
+            'a' -> "<green>"
+            'b' -> "<aqua>"
+            'c' -> "<red>"
+            'd' -> "<light_purple>"
+            'e' -> "<yellow>"
+            'f' -> "<white>"
+            'k' -> "<obfuscated>"
+            'l' -> "<bold>"
+            'm' -> "<strikethrough>"
+            'n' -> "<underlined>"
+            'o' -> "<italic>"
+            'r' -> "<reset>"
+            else -> ""
+        }
+    }
+
+    private fun currentPage(player: Player): Int {
+        val holder = player.openInventory.topInventory.holder as? ThemeMenuHolder ?: return 0
+        return holder.page
+    }
+
+    private fun placeholders(
+        player: Player,
+        total: Int,
+        unlocked: Int,
+        page: Int,
+        pages: Int,
+        pageSize: Int,
+        pageStart: Int,
+        pageEnd: Int
+    ): Map<String, String> {
+        return mapOf(
+            "player" to player.name,
+            "total" to total.toString(),
+            "unlocked" to unlocked.toString(),
+            "page" to (page + 1).toString(),
+            "pages" to pages.toString(),
+            "page_size" to pageSize.toString(),
+            "page_start" to pageStart.toString(),
+            "page_end" to pageEnd.toString()
+        )
+    }
+
+    private fun pageCount(totalThemes: Int, pageSize: Int): Int {
+        return ((totalThemes + pageSize - 1) / pageSize).coerceAtLeast(1)
     }
 }
