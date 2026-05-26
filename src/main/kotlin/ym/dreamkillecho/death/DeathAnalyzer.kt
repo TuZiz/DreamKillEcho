@@ -1,7 +1,6 @@
 package ym.dreamkillecho.death
 
 import org.bukkit.Material
-import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.entity.Projectile
 import org.bukkit.event.entity.EntityDamageByEntityEvent
@@ -80,8 +79,8 @@ class DeathAnalyzer(private val messages: MessageService) {
             "victim" to context.victim.name,
             "weapon" to context.weapon,
             "world" to context.world,
-            "killer_health" to ((killer?.health ?: 0.0) / 2.0).roundToInt().toString(),
-            "victim_health" to (context.victim.health / 2.0).roundToInt().toString(),
+            "killer_health" to formatHealth(killer?.health ?: 0.0),
+            "victim_health" to formatHealth(context.victim.health),
             "distance" to "%.1f".format(context.distance),
             "streak" to streak.toString(),
             "max_streak" to maxStreak.toString(),
@@ -90,5 +89,9 @@ class DeathAnalyzer(private val messages: MessageService) {
             "theme" to theme,
             "server" to server
         )
+    }
+
+    private fun formatHealth(health: Double): String {
+        return health.roundToInt().toString()
     }
 }
