@@ -1,28 +1,53 @@
 # 击杀主题配置。
 # 玩家必须拥有对应 permission 才能切换主题。
 # message 支持 MiniMessage、十六进制颜色、渐变色和插件占位符。
+# priority 数值越高，玩家未手动选择主题时越优先自动使用。
 themes:
   default:
-    display-name: "默认主题"
-    permission: "dreamkillecho.theme.default"
-    message: "<prefix> <killer> 击杀了 <victim>"
-  vip-star:
-    display-name: "VIP星辰主题"
-    permission: "dreamkillecho.theme.vip.star"
-    message: "<#8ec5ff>✦ 星辰裁决 ✦</#8ec5ff> <killer> 使用 <weapon> 击杀了 <victim>"
-  vip-cyber:
-    display-name: "VIP赛博主题"
-    permission: "dreamkillecho.theme.vip.cyber"
-    message: "<#00ffff>[SYSTEM]</#00ffff> <victim> 被 <killer> 清除"
-  svip-god:
-    display-name: "SVIP神罚主题"
-    permission: "dreamkillecho.theme.svip.god"
-    message: "<#ffcc00>👑 神罚降临</#ffcc00> <killer> 以 <killer_health>❤ 血量终结了 <victim>"
-  svip-immortal:
-    display-name: "SVIP不朽主题"
-    permission: "dreamkillecho.theme.svip.immortal"
-    message: "<gradient:#ff0066:#ffcc00>不朽回响</gradient> <killer> 终结了 <victim>"
-  svip-love:
-    display-name: "SVIP心动主题"
-    permission: "dreamkillecho.theme.svip.love"
-    message: "<#ff8fab>❤</#ff8fab> <killer> 将 <victim> 写进了回忆"
+    display-name: "默认"
+    permission: "dreamkillecho.default"
+    priority: 0
+    # 效果: [前缀] PlayerA 用 钻石剑 击败了 PlayerB
+    message: "<prefix> <#a8e6cf><killer></#a8e6cf> <#8c8c8c>用</#8c8c8c> <#e0e0e0><weapon></#e0e0e0> <#8c8c8c>击败了</#8c8c8c> <#ff8a8a><victim></#ff8a8a>"
+
+  vip:
+    display-name: "VIP"
+    permission: "dreamkillecho.vip"
+    priority: 10
+    # 效果: [VIP] PlayerA 挥舞 钻石剑 斩杀了 PlayerB
+    message: "<gradient:#FFD700:#FFA500><b>[VIP]</b></gradient> <#FFD700><killer></#FFD700> <gray>挥舞</gray> <white><weapon></white> <gray>斩杀了</gray> <#FF8C00><victim></#FF8C00>"
+
+  vip-plus:
+    display-name: "VIP+"
+    permission: "dreamkillecho.vipplus"
+    priority: 20
+    # 效果: [VIP+] PlayerA 持 钻石剑 无情终结了 PlayerB
+    message: "<gradient:#FFA500:#FF4500><b>[VIP+]</b></gradient> <#FFB6C1><killer></#FFB6C1> <gray>持</gray> <white><weapon></white> <#ff5c5c>无情终结了</#ff5c5c> <#DC143C><victim></#DC143C>"
+
+  mvp:
+    display-name: "MVP"
+    permission: "dreamkillecho.mvp"
+    priority: 30
+    # 效果: [MVP] PlayerA (20❤) 凭借 钻石剑 强势淘汰 PlayerB
+    message: "<gradient:#00BFFF:#8A2BE2><b>[MVP]</b></gradient> <#87CEFA><killer></#87CEFA> <#696969>(<#FF69B4><killer_health>❤</#FF69B4>)</#696969> <gray>凭借</gray> <#E6E6FA><weapon></#E6E6FA> <#9370DB>强势淘汰</#9370DB> <#DDA0DD><victim></#DDA0DD>"
+
+  mvp-plus:
+    display-name: "MVP+"
+    permission: "dreamkillecho.mvpplus"
+    priority: 40
+    # 效果: [MVP+] PlayerA 以 钻石剑 彻底粉碎了 PlayerB
+    message: "<gradient:#00FFFF:#0055FF><b>[MVP+]</b></gradient> <#00FFFF><killer></#00FFFF> <gray>以</gray> <#E0FFFF><weapon></#E0FFFF> <#4169E1>彻底粉碎了</#4169E1> <#FF1493><victim></#FF1493>"
+
+  svip:
+    display-name: "SVIP"
+    permission: "dreamkillecho.svip"
+    priority: 50
+    # 效果: [SVIP] PlayerA 使用 钻石剑 降下神罚, 抹除了 PlayerB
+    message: "<gradient:#FF0000:#FF8C00:#FFD700><b>[SVIP]</b></gradient> <#FFD700><killer></#FFD700> <gray>使用</gray> <white><weapon></white> <gradient:#FF4500:#FF0000>降下神罚, 抹除了</gradient> <#8B0000><victim></#8B0000>"
+
+  love:
+    display-name: "心动"
+    permission: "dreamkillecho.love"
+    priority: 15
+    # 效果: [❤] PlayerA 用 钻石剑 温柔地带走了 PlayerB ~
+    message: "<gradient:#FFB6C1:#FF69B4><b>[❤]</b></gradient> <#FFC0CB><killer></#FFC0CB> <#ffdbf0>用</#ffdbf0> <white><weapon></white> <#FF1493>温柔地带走了</#FF1493> <#FFB6C1><victim></#FFB6C1> <#FF69B4>~</#FF69B4>"

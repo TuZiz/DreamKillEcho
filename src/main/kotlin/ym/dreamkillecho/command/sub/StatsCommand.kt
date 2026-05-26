@@ -1,12 +1,12 @@
 package ym.dreamkillecho.command.sub
 
-import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import ym.dreamkillecho.command.CommandContext
 import ym.dreamkillecho.command.CommandUtil
 import ym.dreamkillecho.command.SubCommand
 import ym.dreamkillecho.util.Permissions
+import java.util.concurrent.CompletableFuture
 
 class StatsCommand : SubCommand {
     override val names: Set<String> = setOf("stats", "top", "resetstats")
@@ -25,15 +25,26 @@ class StatsCommand : SubCommand {
 
     private fun stats(sender: CommandSender, target: String?, context: CommandContext): Boolean {
         if (!sender.hasPermission(Permissions.ADMIN_STATS) && sender !is Player) return CommandUtil.deny(sender, context.services)
-        val player = target?.let { Bukkit.getOfflinePlayer(it) } ?: (sender as? Player) ?: return context.services.messages.send(sender, "player-only").let { true }
-        val value = context.services.storage.stats(player.uniqueId)
-        context.services.messages.send(sender, "stats-format", mapOf(
-            "player" to (player.name ?: target ?: player.uniqueId.toString()),
-            "kills" to value.kills.toString(),
-            "deaths" to value.deaths.toString(),
-            "streak" to value.currentStreak.toString(),
-            "max_streak" to value.maxStreak.toString()
-        ))
+        val self = sender as? Player
+        if (target == null && self == null) return context.services.messages.send(sender, "player-only").let { true }
+        val lookup = target ?: self!!.uniqueId.toString()
+        context.services.storage.findProfileAsync(lookup).thenCompose { profile ->
+            if (profile == null) {
+                sendSafely(sender, context, "error-player-not-found")
+                CompletableFuture.completedFuture(null)
+            } else {
+                context.services.storage.statsAsync(profile.uuid).thenApply { value -> profile to value }
+            }
+        }.thenAccept { result ->
+            val (profile, value) = result ?: return@thenAccept
+            sendSafely(sender, context, "stats-format", mapOf(
+                "player" to profile.name,
+                "kills" to value.kills.toString(),
+                "deaths" to value.deaths.toString(),
+                "streak" to value.currentStreak.toString(),
+                "max_streak" to value.maxStreak.toString()
+            ))
+        }
         return true
     }
 
@@ -54,9 +65,20 @@ class StatsCommand : SubCommand {
 
     private fun reset(sender: CommandSender, target: String?, context: CommandContext): Boolean {
         if (!sender.hasPermission(Permissions.ADMIN_RESET_STATS)) return CommandUtil.deny(sender, context.services)
-        val offline = target?.let { Bukkit.getOfflinePlayer(it) } ?: return context.services.messages.send(sender, "error-player-not-found").let { true }
-        context.services.storage.resetStats(offline.uniqueId)
-        context.services.messages.send(sender, "resetstats-success", mapOf("player" to (offline.name ?: target)))
+        if (target == null) return context.services.messages.send(sender, "error-player-not-found").let { true }
+        context.services.storage.findProfileAsync(target).thenAccept { profile ->
+            if (profile == null) {
+                sendSafely(sender, context, "error-player-not-found")
+            } else {
+                context.services.storage.resetStats(profile.uuid)
+                sendSafely(sender, context, "resetstats-success", mapOf("player" to profile.name))
+            }
+        }
         return true
+    }
+
+    private fun sendSafely(sender: CommandSender, context: CommandContext, key: String, placeholders: Map<String, String> = emptyMap()) {
+        val task = { context.services.messages.send(sender, key, placeholders) }
+        if (sender is Player) context.services.scheduler.runEntity(sender, task) else context.services.scheduler.runMain(task)
     }
 }

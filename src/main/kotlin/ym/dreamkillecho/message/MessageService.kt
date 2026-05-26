@@ -1,6 +1,7 @@
 package ym.dreamkillecho.message
 
 import net.kyori.adventure.platform.bukkit.BukkitAudiences
+import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import net.kyori.adventure.title.Title
@@ -23,10 +24,13 @@ class MessageService(
     }
 
     fun raw(key: String): String {
-        yaml.getString(key)?.let { return it }
-        fallback.getString(key)?.let { return it }
+        rawOrNull(key)?.let { return it }
         plugin.logger.warning("[DreamKillEcho] Missing language key: $key")
         return key
+    }
+
+    fun rawOrNull(key: String): String? {
+        return yaml.getString(key) ?: fallback.getString(key)
     }
 
     fun list(key: String): List<String> {
@@ -53,6 +57,16 @@ class MessageService(
 
     fun title(player: Player, title: String, subtitle: String, placeholders: Map<String, String> = emptyMap()) {
         audiences.player(player).showTitle(Title.title(render(title, player, placeholders), render(subtitle, player, placeholders)))
+    }
+
+    fun showBossBar(player: Player, template: String, placeholders: Map<String, String> = emptyMap()): BossBar {
+        val bar = BossBar.bossBar(render(template, player, placeholders), 1.0f, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS)
+        audiences.player(player).showBossBar(bar)
+        return bar
+    }
+
+    fun hideBossBar(player: Player, bar: BossBar) {
+        audiences.player(player).hideBossBar(bar)
     }
 
     fun component(template: String, player: Player?, placeholders: Map<String, String> = emptyMap()): Component {

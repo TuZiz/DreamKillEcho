@@ -1,17 +1,18 @@
 package ym.dreamkillecho.death
 
-import org.bukkit.Material
 import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.entity.Projectile
 import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.EntityDamageEvent
 import org.bukkit.event.entity.PlayerDeathEvent
-import org.bukkit.inventory.ItemStack
 import ym.dreamkillecho.message.MessageService
 import kotlin.math.roundToInt
 
-class DeathAnalyzer(private val messages: MessageService) {
+class DeathAnalyzer(
+    private val messages: MessageService,
+    private val weaponNames: WeaponNameService
+) {
     fun analyze(event: PlayerDeathEvent): DeathContext {
         val victim = event.entity
         val damage = victim.lastDamageCause
@@ -60,11 +61,9 @@ class DeathAnalyzer(private val messages: MessageService) {
 
     private fun findWeapon(killer: Player?, damage: EntityDamageEvent?): String {
         if (damage is EntityDamageByEntityEvent && damage.damager is Projectile) {
-            return damage.damager.type.name.lowercase().replace('_', ' ')
+            return weaponNames.projectileName(damage.damager as Projectile)
         }
-        val item: ItemStack? = killer?.inventory?.itemInMainHand
-        if (item == null || item.type == Material.AIR) return messages.raw("bare-hand")
-        return item.itemMeta?.displayName ?: item.type.name.lowercase().replace('_', ' ')
+        return weaponNames.heldItemName(killer?.inventory?.itemInMainHand)
     }
 
     private fun mapCause(cause: EntityDamageEvent.DamageCause?): String {

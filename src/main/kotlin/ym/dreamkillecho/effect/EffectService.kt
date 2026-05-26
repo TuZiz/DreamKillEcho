@@ -4,8 +4,6 @@ import org.bukkit.Color
 import org.bukkit.FireworkEffect
 import org.bukkit.Particle
 import org.bukkit.Sound
-import org.bukkit.boss.BarColor
-import org.bukkit.boss.BarStyle
 import org.bukkit.entity.EntityType
 import org.bukkit.entity.Firework
 import org.bukkit.entity.Player
@@ -50,14 +48,9 @@ class EffectService(
                 repeat(settings.effects.firework.maxPerKill.coerceIn(0, 2)) { spawnFirework(killer) }
             }
             if (settings.effects.bossbar.enabled && killer.hasPermission(Permissions.EFFECT_BOSSBAR)) {
-                val bar = killer.server.createBossBar(
-                    messages.plainString(settings.effects.bossbar.message, killer, context.placeholders),
-                    BarColor.YELLOW,
-                    BarStyle.SOLID
-                )
-                bar.addPlayer(killer)
+                val bar = messages.showBossBar(killer, settings.effects.bossbar.message, context.placeholders)
                 scheduler.runLater(100L) {
-                    scheduler.runEntity(killer) { bar.removeAll() }
+                    scheduler.runEntity(killer) { messages.hideBossBar(killer, bar) }
                 }
             }
         }

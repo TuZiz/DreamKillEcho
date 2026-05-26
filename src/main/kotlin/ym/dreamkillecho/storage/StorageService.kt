@@ -6,8 +6,9 @@ import org.bukkit.plugin.java.JavaPlugin
 import ym.dreamkillecho.config.StorageSettings
 import ym.dreamkillecho.storage.datasource.DataSourceFactory
 import ym.dreamkillecho.storage.migration.SchemaMigrator
-import java.sql.Connection
-import java.sql.ResultSet
+import ym.dreamkillecho.storage.repository.KillLogRepository
+import ym.dreamkillecho.storage.repository.PlayerRepository
+import ym.dreamkillecho.storage.repository.StatsRepository
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
@@ -24,6 +25,9 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     private val dirtyProfiles = ConcurrentHashMap.newKeySet<UUID>()
     private val dirtyStats = ConcurrentHashMap.newKeySet<UUID>()
     private val statsLock = Any()
+    private val playerRepository = PlayerRepository()
+    private val statsRepository = StatsRepository()
+    private val killLogRepository = KillLogRepository()
     private var dataSource: HikariDataSource? = null
 
     @Volatile
@@ -74,6 +78,25 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
         return synchronized(statsLock) { stats.computeIfAbsent(uuid) { PlayerStats(uuid) }.copy() }
     }
 
+    fun statsAsync(uuid: UUID): CompletableFuture<PlayerStats> {
+        synchronized(statsLock) {
+            stats[uuid]?.let { return CompletableFuture.completedFuture(it.copy()) }
+        }
+        return CompletableFuture.supplyAsync({
+            if (degraded) {
+                PlayerStats(uuid)
+            } else {
+                dataSource?.connection?.use { connection -> statsRepository.load(connection, uuid) }
+                    ?: PlayerStats(uuid)
+            }.also { loaded ->
+                synchronized(statsLock) { stats.putIfAbsent(uuid, loaded) }
+            }.copy()
+        }, executor).exceptionally { throwable ->
+            plugin.logger.warning("[DreamKillEcho] Failed to load stats for $uuid: ${throwable.message}")
+            PlayerStats(uuid)
+        }
+    }
+
     fun markProfileDirty(uuid: UUID) {
         profile(uuid).updatedAt = System.currentTimeMillis()
         dirtyProfiles += uuid
@@ -83,6 +106,23 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
         synchronized(statsLock) {
             stats.computeIfAbsent(uuid) { PlayerStats(uuid) }.updatedAt = System.currentTimeMillis()
             dirtyStats += uuid
+        }
+    }
+
+    fun findProfileAsync(nameOrUuid: String): CompletableFuture<PlayerProfile?> {
+        uuidFromStringOrNull(nameOrUuid)?.let { uuid ->
+            return CompletableFuture.completedFuture(profile(uuid))
+        }
+        profiles.values.firstOrNull { it.name.equals(nameOrUuid, ignoreCase = true) }?.let {
+            return CompletableFuture.completedFuture(it)
+        }
+        return CompletableFuture.supplyAsync({
+            if (degraded) null else dataSource?.connection?.use { connection -> playerRepository.findByName(connection, nameOrUuid) }
+        }, executor).thenApply { loaded ->
+            loaded?.also { profiles[it.uuid] = it }
+        }.exceptionally { throwable ->
+            plugin.logger.warning("[DreamKillEcho] Failed to find player $nameOrUuid: ${throwable.message}")
+            null
         }
     }
 
@@ -118,18 +158,7 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
         CompletableFuture.runAsync({
             runCatching {
                 dataSource?.connection?.use { connection ->
-                    connection.prepareStatement(
-                        "INSERT INTO kill_logs(killer_uuid,victim_uuid,weapon,world,death_cause,distance,created_at) VALUES(?,?,?,?,?,?,?)"
-                    ).use { ps ->
-                        ps.setString(1, log.killerUuid?.toString())
-                        ps.setString(2, log.victimUuid.toString())
-                        ps.setString(3, log.weapon)
-                        ps.setString(4, log.world)
-                        ps.setString(5, log.deathCause)
-                        ps.setDouble(6, log.distance)
-                        ps.setLong(7, log.createdAt)
-                        ps.executeUpdate()
-                    }
+                    killLogRepository.insert(connection, log)
                 }
             }.onFailure { plugin.logger.warning("[DreamKillEcho] Failed to write kill log: ${it.message}") }
         }, executor)
@@ -146,11 +175,11 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
                 connection.autoCommit = false
                 try {
                     for (uuid in profileIds) {
-                        profiles[uuid]?.let { saveProfile(connection, it) }
+                        profiles[uuid]?.let { playerRepository.save(connection, it) }
                         dirtyProfiles -= uuid
                     }
                     for (copy in statCopies) {
-                        saveStats(connection, copy)
+                        statsRepository.save(connection, copy)
                         dirtyStats -= copy.uuid
                     }
                     connection.commit()
@@ -178,14 +207,7 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
                 }
             } else {
                 dataSource?.connection?.use { connection ->
-                    connection.prepareStatement("SELECT * FROM stats ORDER BY $column DESC LIMIT ?").use { ps ->
-                        ps.setInt(1, limit)
-                        ps.executeQuery().use { rs ->
-                            val result = mutableListOf<PlayerStats>()
-                            while (rs.next()) result += readStats(rs)
-                            result
-                        }
-                    }
+                    statsRepository.top(connection, column, limit)
                 } ?: emptyList()
             }
         }, executor)
@@ -207,88 +229,28 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
 
     private fun loadOrCreateProfile(uuid: UUID, name: String): PlayerProfile {
         dataSource!!.connection.use { connection ->
-            connection.prepareStatement("SELECT * FROM players WHERE uuid=?").use { ps ->
-                ps.setString(1, uuid.toString())
-                ps.executeQuery().use { rs ->
-                    if (rs.next()) return readProfile(rs).also {
-                        if (it.name != name) {
-                            it.name = name
-                            profiles[uuid] = it
-                            dirtyProfiles += uuid
-                        }
-                    }
+            playerRepository.load(connection, uuid)?.let { loaded ->
+                if (loaded.name != name) {
+                    loaded.name = name
+                    profiles[uuid] = loaded
+                    dirtyProfiles += uuid
                 }
+                return loaded
             }
-            return PlayerProfile(uuid, name).also { saveProfile(connection, it) }
+            return PlayerProfile(uuid, name).also { playerRepository.save(connection, it) }
         }
     }
 
     private fun loadOrCreateStats(uuid: UUID): PlayerStats {
         dataSource!!.connection.use { connection ->
-            connection.prepareStatement("SELECT * FROM stats WHERE uuid=?").use { ps ->
-                ps.setString(1, uuid.toString())
-                ps.executeQuery().use { rs -> if (rs.next()) return readStats(rs) }
-            }
-            return PlayerStats(uuid).also { saveStats(connection, it) }
+            statsRepository.load(connection, uuid)?.let { return it }
+            return PlayerStats(uuid).also { statsRepository.save(connection, it) }
         }
-    }
-
-    private fun saveProfile(connection: Connection, profile: PlayerProfile) {
-        connection.prepareStatement("REPLACE INTO players(uuid,name,selected_theme,custom_message,custom_message_status,custom_message_updated_at,receive_broadcast,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)").use { ps ->
-            ps.setString(1, profile.uuid.toString())
-            ps.setString(2, profile.name)
-            ps.setString(3, profile.selectedTheme)
-            ps.setString(4, profile.customMessage)
-            ps.setString(5, profile.customMessageStatus.name)
-            ps.setLong(6, profile.customMessageUpdatedAt)
-            ps.setBoolean(7, profile.receiveBroadcast)
-            ps.setLong(8, profile.createdAt)
-            ps.setLong(9, profile.updatedAt)
-            ps.executeUpdate()
-        }
-    }
-
-    private fun saveStats(connection: Connection, value: PlayerStats) {
-        connection.prepareStatement("REPLACE INTO stats(uuid,kills,deaths,current_streak,max_streak,last_victim_uuid,last_kill_time,updated_at) VALUES(?,?,?,?,?,?,?,?)").use { ps ->
-            ps.setString(1, value.uuid.toString())
-            ps.setInt(2, value.kills)
-            ps.setInt(3, value.deaths)
-            ps.setInt(4, value.currentStreak)
-            ps.setInt(5, value.maxStreak)
-            ps.setString(6, value.lastVictimUuid?.toString())
-            ps.setLong(7, value.lastKillTime)
-            ps.setLong(8, value.updatedAt)
-            ps.executeUpdate()
-        }
-    }
-
-    private fun readProfile(rs: ResultSet): PlayerProfile {
-        return PlayerProfile(
-            uuid = UUID.fromString(rs.getString("uuid")),
-            name = rs.getString("name"),
-            selectedTheme = rs.getString("selected_theme"),
-            customMessage = rs.getString("custom_message"),
-            customMessageStatus = runCatching { CustomMessageStatus.valueOf(rs.getString("custom_message_status")) }.getOrDefault(CustomMessageStatus.NONE),
-            customMessageUpdatedAt = rs.getLong("custom_message_updated_at"),
-            receiveBroadcast = rs.getBoolean("receive_broadcast"),
-            createdAt = rs.getLong("created_at"),
-            updatedAt = rs.getLong("updated_at")
-        )
-    }
-
-    private fun readStats(rs: ResultSet): PlayerStats {
-        val lastVictim = rs.getString("last_victim_uuid")
-        return PlayerStats(
-            uuid = UUID.fromString(rs.getString("uuid")),
-            kills = rs.getInt("kills"),
-            deaths = rs.getInt("deaths"),
-            currentStreak = rs.getInt("current_streak"),
-            maxStreak = rs.getInt("max_streak"),
-            lastVictimUuid = lastVictim?.let { runCatching { UUID.fromString(it) }.getOrNull() },
-            lastKillTime = rs.getLong("last_kill_time"),
-            updatedAt = rs.getLong("updated_at")
-        )
     }
 
     fun cachedProfiles(): Collection<PlayerProfile> = profiles.values
+
+    private fun uuidFromStringOrNull(value: String): UUID? {
+        return runCatching { UUID.fromString(value) }.getOrNull()
+    }
 }
