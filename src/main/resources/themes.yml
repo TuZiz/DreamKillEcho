@@ -1,0 +1,28 @@
+# 击杀主题配置。
+# 玩家必须拥有对应 permission 才能切换主题。
+# message 支持 MiniMessage、十六进制颜色、渐变色和插件占位符。
+themes:
+  default:
+    display-name: "默认主题"
+    permission: "dreamkillecho.theme.default"
+    message: "<prefix> <killer> 击杀了 <victim>"
+  vip-star:
+    display-name: "VIP星辰主题"
+    permission: "dreamkillecho.theme.vip.star"
+    message: "<#8ec5ff>✦ 星辰裁决 ✦</#8ec5ff> <killer> 使用 <weapon> 击杀了 <victim>"
+  vip-cyber:
+    display-name: "VIP赛博主题"
+    permission: "dreamkillecho.theme.vip.cyber"
+    message: "<#00ffff>[SYSTEM]</#00ffff> <victim> 被 <killer> 清除"
+  svip-god:
+    display-name: "SVIP神罚主题"
+    permission: "dreamkillecho.theme.svip.god"
+    message: "<#ffcc00>👑 神罚降临</#ffcc00> <killer> 以 <killer_health>❤ 血量终结了 <victim>"
+  svip-immortal:
+    display-name: "SVIP不朽主题"
+    permission: "dreamkillecho.theme.svip.immortal"
+    message: "<gradient:#ff0066:#ffcc00>不朽回响</gradient> <killer> 终结了 <victim>"
+  svip-love:
+    display-name: "SVIP心动主题"
+    permission: "dreamkillecho.theme.svip.love"
+    message: "<#ff8fab>❤</#ff8fab> <killer> 将 <victim> 写进了回忆"

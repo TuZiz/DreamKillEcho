@@ -1,0 +1,12 @@
+target/
+*.iml
+.idea/
+.classpath
+.project
+.settings/
+*.log
+*.db
+*.sqlite
+plugins/
+server/
+run/

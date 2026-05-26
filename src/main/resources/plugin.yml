@@ -1,0 +1,63 @@
+name: DreamKillEcho
+version: '${project.version}'
+main: ym.dreamkillecho.DreamKillEcho
+api-version: '1.21'
+folia-supported: true
+softdepend:
+  - PlaceholderAPI
+commands:
+  dreamkillecho:
+    description: DreamKillEcho main command.
+    usage: /dreamkillecho help
+    aliases:
+      - dke
+      - killecho
+permissions:
+  dreamkillecho.use:
+    default: true
+  dreamkillecho.toggle:
+    default: true
+  dreamkillecho.theme.default:
+    default: true
+  dreamkillecho.theme.vip.star:
+    default: op
+  dreamkillecho.theme.vip.cyber:
+    default: op
+  dreamkillecho.theme.svip.god:
+    default: op
+  dreamkillecho.theme.svip.immortal:
+    default: op
+  dreamkillecho.theme.svip.love:
+    default: op
+  dreamkillecho.effect.title:
+    default: op
+  dreamkillecho.effect.actionbar:
+    default: op
+  dreamkillecho.effect.sound:
+    default: op
+  dreamkillecho.effect.particle:
+    default: op
+  dreamkillecho.effect.firework:
+    default: op
+  dreamkillecho.effect.bossbar:
+    default: op
+  dreamkillecho.card.vip:
+    default: op
+  dreamkillecho.card.svip:
+    default: op
+  dreamkillecho.custom.message:
+    default: op
+  dreamkillecho.custom.color:
+    default: op
+  dreamkillecho.custom.minimessage:
+    default: op
+  dreamkillecho.admin.reload:
+    default: op
+  dreamkillecho.admin.review:
+    default: op
+  dreamkillecho.admin.stats:
+    default: op
+  dreamkillecho.admin.resetstats:
+    default: op
+  dreamkillecho.admin.bypass:
+    default: op

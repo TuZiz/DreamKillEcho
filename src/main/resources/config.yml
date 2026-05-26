@@ -1,0 +1,118 @@
+# 服务器显示名，会用于 <server> 占位符。
+server-name: "DreamServer"
+
+# 世界限制：
+# mode 支持 blacklist / whitelist。
+# blocked-world-* 表示命中限制世界时是否仍然允许对应行为。
+worlds:
+  mode: blacklist
+  list:
+    - spawn
+    - lobby
+  blocked-world-broadcast: false
+  blocked-world-stats: false
+  blocked-world-effects: false
+
+# 基础播报设置。
+# range-mode 支持 global / nearby / killer。
+broadcast:
+  enabled: true
+  include-vanilla-death-message: false
+  range-mode: global
+  nearby-range: 64.0
+  bypass-permission: "dreamkillecho.admin.bypass"
+
+# 击杀名片设置。
+# mode 支持 killer / global / nearby。
+card:
+  enabled: true
+  mode: killer
+  nearby-range: 64.0
+  lines:
+    - "<gray>━━━━━━━━━━━━━━━━"
+    - "<white>击杀者：<killer>"
+    - "<white>受害者：<victim>"
+    - "<white>武器：<weapon>"
+    - "<white>距离：<distance> 格"
+    - "<white>剩余血量：<killer_health>❤"
+    - "<white>当前连杀：<streak>"
+    - "<gray>━━━━━━━━━━━━━━━━"
+
+# 击杀展示特效，只做视觉与声音展示，不提供任何战斗收益。
+# global-limit-per-minute 是全局特效限流，避免粒子、烟花刷屏。
+effects:
+  enabled: true
+  global-limit-per-minute: 30
+  title:
+    enabled: true
+    title: "<gold>击杀</gold>"
+    subtitle: "<killer> <gray>终结了</gray> <victim>"
+  actionbar:
+    enabled: true
+    message: "<yellow>当前连杀：<streak>"
+  sound:
+    enabled: true
+    name: "entity.player.levelup"
+    volume: 0.7
+    pitch: 1.2
+  particle:
+    enabled: true
+    name: "FIREWORK"
+    count: 16
+    max-count: 32
+  firework:
+    enabled: false
+    max-per-kill: 1
+  bossbar:
+    enabled: false
+    seconds: 5
+    message: "<gold><killer> 击杀了 <victim></gold>"
+
+# 自定义击杀语安全设置。
+# denied-tags 默认拦截 click、hover、selector、nbt 等不适合玩家自由输入的 MiniMessage 标签。
+custom-message:
+  max-length: 80
+  cooldown-seconds: 60
+  require-review: true
+  use-as-theme-message: false
+  blocked-words:
+    - "blocked-word"
+  denied-tags:
+    - click
+    - hover
+    - insertion
+    - selector
+    - score
+    - nbt
+    - keybind
+    - translatable
+
+# 连杀播报配置。只播报展示，不发放奖励。
+streaks:
+  enabled: true
+  messages:
+    3: "<gold><killer> 达成 3 连杀！</gold>"
+    5: "<red><killer> 达成 5 连杀！</red>"
+    8: "<dark_red><killer> 达成 8 连杀！</dark_red>"
+    10: "<gradient:#ffcc00:#ff0066><killer> 达成 10 连杀！</gradient>"
+  shutdown-message: "<aqua><killer> 终结了 <victim> 的 <streak> 连杀！</aqua>"
+  revenge-message: "<light_purple><killer> 完成了对 <victim> 的复仇！</light_purple>"
+
+# 防刷屏规则，只影响播报与展示，不影响正常击杀事件。
+anti-spam:
+  same-killer-cooldown-seconds: 2
+  same-victim-cooldown-seconds: 2
+  max-broadcast-per-minute: 60
+  max-effect-per-minute: 30
+  per-player-message-cooldown: 1
+
+# 防刷击杀规则，只影响统计与播报，不阻止玩家正常 PVP。
+anti-farm:
+  enabled: true
+  same-victim-no-stats-seconds: 60
+  same-ip-no-stats: false
+  max-same-victim-count-per-day: 5
+
+# 缓存写回数据库的周期。数据库写入会走异步存储线程。
+storage:
+  flush-interval-seconds: 120

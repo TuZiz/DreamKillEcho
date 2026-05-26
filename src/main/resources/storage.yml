@@ -1,0 +1,20 @@
+# 存储配置。
+# type 支持 sqlite / mysql。修改 type 后请重启服务器，不要只热重载。
+storage:
+  type: sqlite
+
+# SQLite 默认存储文件，位于插件数据目录下。
+sqlite:
+  file: "data.db"
+
+# MySQL 可选存储。适合多服或需要外部备份的场景。
+mysql:
+  host: "localhost"
+  port: 3306
+  database: "dreamkillecho"
+  username: "root"
+  password: "password"
+  pool:
+    maximum-pool-size: 10
+    minimum-idle: 2
+    connection-timeout: 30000
