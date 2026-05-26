@@ -1,5 +1,7 @@
 package ym.dreamkillecho.command
 
+import net.kyori.adventure.text.Component
+import org.bukkit.Material
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import ym.dreamkillecho.bootstrap.PluginServices
@@ -42,6 +44,12 @@ object CommandUtil {
             "prefix" to services.messages.prefix,
             "theme" to theme,
             "server" to services.config.settings.serverName
+        )
+    }
+
+    fun previewComponentPlaceholders(): Map<String, Component> {
+        return mapOf(
+            "weapon" to Component.translatable(Material.DIAMOND_SWORD.itemTranslationKey ?: "item.minecraft.diamond_sword")
         )
     }
 }

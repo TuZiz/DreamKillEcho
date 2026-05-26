@@ -4,6 +4,8 @@ import net.kyori.adventure.platform.bukkit.BukkitAudiences
 import net.kyori.adventure.bossbar.BossBar
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
+import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver
 import net.kyori.adventure.title.Title
 import org.bukkit.command.CommandSender
 import org.bukkit.configuration.file.YamlConfiguration
@@ -42,25 +44,54 @@ class MessageService(
         return listOf(key)
     }
 
-    fun send(sender: CommandSender, key: String, placeholders: Map<String, String> = emptyMap()) {
-        sendRaw(sender, raw(key), placeholders)
+    fun send(
+        sender: CommandSender,
+        key: String,
+        placeholders: Map<String, String> = emptyMap(),
+        componentPlaceholders: Map<String, Component> = emptyMap()
+    ) {
+        sendRaw(sender, raw(key), placeholders, componentPlaceholders)
     }
 
-    fun sendRaw(sender: CommandSender, template: String, placeholders: Map<String, String> = emptyMap()) {
-        val parsed = render(template, sender as? Player, placeholders)
+    fun sendRaw(
+        sender: CommandSender,
+        template: String,
+        placeholders: Map<String, String> = emptyMap(),
+        componentPlaceholders: Map<String, Component> = emptyMap()
+    ) {
+        val parsed = render(template, sender as? Player, placeholders, componentPlaceholders)
         audiences.sender(sender).sendMessage(parsed)
     }
 
-    fun actionBar(player: Player, template: String, placeholders: Map<String, String> = emptyMap()) {
-        audiences.player(player).sendActionBar(render(template, player, placeholders))
+    fun actionBar(
+        player: Player,
+        template: String,
+        placeholders: Map<String, String> = emptyMap(),
+        componentPlaceholders: Map<String, Component> = emptyMap()
+    ) {
+        audiences.player(player).sendActionBar(render(template, player, placeholders, componentPlaceholders))
     }
 
-    fun title(player: Player, title: String, subtitle: String, placeholders: Map<String, String> = emptyMap()) {
-        audiences.player(player).showTitle(Title.title(render(title, player, placeholders), render(subtitle, player, placeholders)))
+    fun title(
+        player: Player,
+        title: String,
+        subtitle: String,
+        placeholders: Map<String, String> = emptyMap(),
+        componentPlaceholders: Map<String, Component> = emptyMap()
+    ) {
+        audiences.player(player).showTitle(Title.title(
+            render(title, player, placeholders, componentPlaceholders),
+            render(subtitle, player, placeholders, componentPlaceholders)
+        ))
     }
 
-    fun showBossBar(player: Player, template: String, placeholders: Map<String, String> = emptyMap()): BossBar {
-        val bar = BossBar.bossBar(render(template, player, placeholders), 1.0f, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS)
+    fun showBossBar(
+        player: Player,
+        template: String,
+        placeholders: Map<String, String> = emptyMap(),
+        componentPlaceholders: Map<String, Component> = emptyMap()
+    ): BossBar {
+        val bar = BossBar.bossBar(render(template, player, placeholders, componentPlaceholders), 1.0f, BossBar.Color.YELLOW, BossBar.Overlay.PROGRESS)
         audiences.player(player).showBossBar(bar)
         return bar
     }
@@ -69,8 +100,13 @@ class MessageService(
         audiences.player(player).hideBossBar(bar)
     }
 
-    fun component(template: String, player: Player?, placeholders: Map<String, String> = emptyMap()): Component {
-        return render(template, player, placeholders)
+    fun component(
+        template: String,
+        player: Player?,
+        placeholders: Map<String, String> = emptyMap(),
+        componentPlaceholders: Map<String, Component> = emptyMap()
+    ): Component {
+        return render(template, player, placeholders, componentPlaceholders)
     }
 
     fun renderedString(template: String, player: Player?, placeholders: Map<String, String> = emptyMap()): String {
@@ -81,8 +117,30 @@ class MessageService(
         return renderedString(template, player, placeholders).replace(Regex("<[^>]+>"), "")
     }
 
-    private fun render(template: String, player: Player?, placeholders: Map<String, String>): Component {
-        return miniMessage.deserialize(replacePlaceholders(template, player, placeholders))
+    private fun render(
+        template: String,
+        player: Player?,
+        placeholders: Map<String, String>,
+        componentPlaceholders: Map<String, Component>
+    ): Component {
+        val parsedTemplate = applyPlaceholderApi(template.replace("<prefix>", prefix), player)
+        return miniMessage.deserialize(parsedTemplate, buildResolver(placeholders, componentPlaceholders))
+    }
+
+    private fun buildResolver(
+        placeholders: Map<String, String>,
+        componentPlaceholders: Map<String, Component>
+    ): TagResolver {
+        val builder = TagResolver.builder()
+        for ((key, value) in placeholders) {
+            if (!componentPlaceholders.containsKey(key)) {
+                builder.resolver(Placeholder.unparsed(key, value))
+            }
+        }
+        for ((key, value) in componentPlaceholders) {
+            builder.resolver(Placeholder.component(key, value))
+        }
+        return builder.build()
     }
 
     private fun replacePlaceholders(template: String, player: Player?, placeholders: Map<String, String>): String {
@@ -90,13 +148,15 @@ class MessageService(
         for ((key, value) in placeholders) {
             result = result.replace("<$key>", escapePlain(value))
         }
-        if (player != null && plugin.server.pluginManager.isPluginEnabled("PlaceholderAPI")) {
-            result = runCatching {
-                val clazz = Class.forName("me.clip.placeholderapi.PlaceholderAPI")
-                clazz.getMethod("setPlaceholders", Player::class.java, String::class.java).invoke(null, player, result) as String
-            }.getOrDefault(result)
-        }
-        return result
+        return applyPlaceholderApi(result, player)
+    }
+
+    private fun applyPlaceholderApi(template: String, player: Player?): String {
+        if (player == null || !plugin.server.pluginManager.isPluginEnabled("PlaceholderAPI")) return template
+        return runCatching {
+            val clazz = Class.forName("me.clip.placeholderapi.PlaceholderAPI")
+            clazz.getMethod("setPlaceholders", Player::class.java, String::class.java).invoke(null, player, template) as String
+        }.getOrDefault(template)
     }
 
     private fun escapePlain(value: String): String {

@@ -64,7 +64,8 @@ class ThemeCommand : SubCommand {
             return
         }
         val placeholders = CommandUtil.previewPlaceholders(player, theme.displayName, context.services)
+        val componentPlaceholders = CommandUtil.previewComponentPlaceholders()
         context.services.messages.send(player, "theme-preview", mapOf("message" to context.services.messages.renderedString(theme.message, player, placeholders)))
-        context.services.messages.sendRaw(player, theme.message, placeholders)
+        context.services.messages.sendRaw(player, theme.message, placeholders, componentPlaceholders)
     }
 }

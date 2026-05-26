@@ -102,7 +102,8 @@ mvn clean package
 - `<killer>`：击杀者名称；环境死亡时为语言文件的 unknown-player。
 - `<victim>`：死亡玩家名称。
 - `<mob>`：生物或投掷物来源名称。
-- `<weapon>`：武器名称，优先显示物品自定义名，其次读取语言文件中的原版物品/投掷物名称。
+- `<weapon>`：武器名称，优先显示物品自定义名；原版物品和投掷物会用 Adventure `Component.translatable(...)` 交给客户端按本地语言翻译。
+- 该占位符在真正发送给玩家的消息里是组件占位符，预览文本仍会保留可读 fallback。
 - `<killer_health>`：击杀者剩余原始血量，例如 20 表示满血。
 - `<victim_health>`：死亡玩家剩余原始血量。
 - `<distance>`：击杀距离，单位为方块。

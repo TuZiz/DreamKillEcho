@@ -25,13 +25,14 @@ class DeathAnalyzer(
             victim = victim,
             killer = killer,
             mobName = mobName,
-            weapon = weapon,
+            weapon = weapon.fallbackText,
             world = victim.world.name,
             deathCause = cause,
             broadcastKey = if (killer != null) "player" else if (cause == "projectile") "projectile" else if (mobName != null) "mob" else cause,
             distance = distance,
             killerIp = killer?.address?.address?.hostAddress,
-            victimIp = victim.address?.address?.hostAddress
+            victimIp = victim.address?.address?.hostAddress,
+            componentPlaceholders = linkedMapOf("weapon" to weapon.component)
         )
     }
 
@@ -59,7 +60,7 @@ class DeathAnalyzer(
         return null
     }
 
-    private fun findWeapon(killer: Player?, damage: EntityDamageEvent?): String {
+    private fun findWeapon(killer: Player?, damage: EntityDamageEvent?): WeaponDisplay {
         if (damage is EntityDamageByEntityEvent && damage.damager is Projectile) {
             return weaponNames.projectileName(damage.damager as Projectile)
         }

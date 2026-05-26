@@ -28,10 +28,10 @@ class EffectService(
         if (!globalEffectLimiter.tryAcquire()) return
         scheduler.runEntity(killer) {
             if (settings.effects.title.enabled && killer.hasPermission(Permissions.EFFECT_TITLE)) {
-                messages.title(killer, settings.effects.title.message, settings.effects.subtitle, context.placeholders)
+                messages.title(killer, settings.effects.title.message, settings.effects.subtitle, context.placeholders, context.componentPlaceholders)
             }
             if (settings.effects.actionbar.enabled && killer.hasPermission(Permissions.EFFECT_ACTIONBAR)) {
-                messages.actionBar(killer, settings.effects.actionbar.message, context.placeholders)
+                messages.actionBar(killer, settings.effects.actionbar.message, context.placeholders, context.componentPlaceholders)
             }
             if (settings.effects.sound.enabled && killer.hasPermission(Permissions.EFFECT_SOUND)) {
                 val sound = runCatching { Sound.valueOf(settings.effects.sound.name.uppercase().replace('.', '_')) }.getOrNull()
@@ -48,7 +48,7 @@ class EffectService(
                 repeat(settings.effects.firework.maxPerKill.coerceIn(0, 2)) { spawnFirework(killer) }
             }
             if (settings.effects.bossbar.enabled && killer.hasPermission(Permissions.EFFECT_BOSSBAR)) {
-                val bar = messages.showBossBar(killer, settings.effects.bossbar.message, context.placeholders)
+                val bar = messages.showBossBar(killer, settings.effects.bossbar.message, context.placeholders, context.componentPlaceholders)
                 scheduler.runLater(100L) {
                     scheduler.runEntity(killer) { messages.hideBossBar(killer, bar) }
                 }

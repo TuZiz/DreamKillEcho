@@ -1,5 +1,6 @@
 package ym.dreamkillecho.death
 
+import net.kyori.adventure.text.Component
 import org.bukkit.entity.Player
 
 data class DeathContext(
@@ -13,7 +14,8 @@ data class DeathContext(
     val distance: Double,
     val killerIp: String?,
     val victimIp: String?,
-    val placeholders: MutableMap<String, String> = linkedMapOf()
+    val placeholders: MutableMap<String, String> = linkedMapOf(),
+    val componentPlaceholders: MutableMap<String, Component> = linkedMapOf()
 )
 
 data class KillProcessResult(

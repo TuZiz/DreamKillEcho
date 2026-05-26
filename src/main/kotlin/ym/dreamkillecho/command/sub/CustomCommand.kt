@@ -44,7 +44,8 @@ class CustomCommand : SubCommand {
     private fun preview(player: org.bukkit.entity.Player, context: CommandContext) {
         val template = context.services.storage.profile(player.uniqueId, player.name).customMessage ?: ""
         val placeholders = CommandUtil.previewPlaceholders(player, "custom", context.services)
+        val componentPlaceholders = CommandUtil.previewComponentPlaceholders()
         context.services.messages.send(player, "custom-preview", mapOf("message" to context.services.messages.renderedString(template, player, placeholders)))
-        if (template.isNotBlank()) context.services.messages.sendRaw(player, template, placeholders)
+        if (template.isNotBlank()) context.services.messages.sendRaw(player, template, placeholders, componentPlaceholders)
     }
 }
