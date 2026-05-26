@@ -29,7 +29,10 @@ class AntiAbuseService(settings: PluginSettings) {
             val current = dailyCounts[pairKey]
             val count = if (current?.first == today) current.second + 1 else 1
             dailyCounts[pairKey] = today to count
-            tooSoon || count > antiFarm.maxSameVictimCountPerDay
+            val sameIp = antiFarm.sameIpNoStats &&
+                context.killerIp != null &&
+                context.killerIp == context.victimIp
+            tooSoon || sameIp || count > antiFarm.maxSameVictimCountPerDay
         } else {
             false
         }

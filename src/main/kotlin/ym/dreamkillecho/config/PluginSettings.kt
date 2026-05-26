@@ -1,6 +1,7 @@
 package ym.dreamkillecho.config
 
 data class PluginSettings(
+    val language: LanguageSettings,
     val serverName: String,
     val worldRules: WorldRules,
     val broadcast: BroadcastSettings,
@@ -11,6 +12,11 @@ data class PluginSettings(
     val antiSpam: AntiSpamSettings,
     val antiFarm: AntiFarmSettings,
     val flushIntervalSeconds: Long
+)
+
+data class LanguageSettings(
+    val defaultLanguage: String,
+    val fallbackLanguage: String
 )
 
 data class WorldRules(
@@ -112,6 +118,7 @@ data class MysqlSettings(
 data class LoadedConfigs(
     val settings: PluginSettings,
     val language: org.bukkit.configuration.file.YamlConfiguration,
+    val fallbackLanguage: org.bukkit.configuration.file.YamlConfiguration,
     val themes: org.bukkit.configuration.file.YamlConfiguration,
     val storage: StorageSettings
 )

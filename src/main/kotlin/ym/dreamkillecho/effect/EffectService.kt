@@ -15,24 +15,22 @@ import ym.dreamkillecho.death.DeathContext
 import ym.dreamkillecho.message.MessageService
 import ym.dreamkillecho.scheduler.SchedulerAdapter
 import ym.dreamkillecho.util.Permissions
+import ym.dreamkillecho.util.RollingWindowLimiter
 
 class EffectService(
     private val scheduler: SchedulerAdapter,
     private val messages: MessageService,
     private val settings: PluginSettings
 ) {
+    private val globalEffectLimiter = RollingWindowLimiter(settings.effects.globalLimitPerMinute, 60_000L)
+
     fun play(context: DeathContext) {
         val killer = context.killer ?: return
         if (!settings.effects.enabled) return
+        if (!globalEffectLimiter.tryAcquire()) return
         scheduler.runEntity(killer) {
             if (settings.effects.title.enabled && killer.hasPermission(Permissions.EFFECT_TITLE)) {
-                killer.sendTitle(
-                    messages.plainString(settings.effects.title.message, killer, context.placeholders),
-                    messages.plainString(settings.effects.subtitle, killer, context.placeholders),
-                    10,
-                    40,
-                    10
-                )
+                messages.title(killer, settings.effects.title.message, settings.effects.subtitle, context.placeholders)
             }
             if (settings.effects.actionbar.enabled && killer.hasPermission(Permissions.EFFECT_ACTIONBAR)) {
                 messages.actionBar(killer, settings.effects.actionbar.message, context.placeholders)

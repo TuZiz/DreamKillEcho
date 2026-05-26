@@ -38,3 +38,10 @@ data class KillLog(
     val distance: Double,
     val createdAt: Long = System.currentTimeMillis()
 )
+
+data class StatsUpdateResult(
+    val previousVictimStreak: Int,
+    val killerStreak: Int,
+    val killerMaxStreak: Int,
+    val victimMaxStreak: Int
+)

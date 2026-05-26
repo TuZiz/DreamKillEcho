@@ -1,12 +1,11 @@
 package ym.dreamkillecho.storage
 
-import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import org.bukkit.Bukkit
-import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import ym.dreamkillecho.config.StorageSettings
-import java.io.File
+import ym.dreamkillecho.storage.datasource.DataSourceFactory
+import ym.dreamkillecho.storage.migration.SchemaMigrator
 import java.sql.Connection
 import java.sql.ResultSet
 import java.util.UUID
@@ -14,6 +13,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class StorageService(private val plugin: JavaPlugin, private val settings: StorageSettings) {
     private val executor: ExecutorService = Executors.newSingleThreadExecutor { runnable ->
@@ -23,6 +23,7 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     private val stats = ConcurrentHashMap<UUID, PlayerStats>()
     private val dirtyProfiles = ConcurrentHashMap.newKeySet<UUID>()
     private val dirtyStats = ConcurrentHashMap.newKeySet<UUID>()
+    private val statsLock = Any()
     private var dataSource: HikariDataSource? = null
 
     @Volatile
@@ -31,10 +32,9 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
 
     fun start() {
         try {
-            dataSource = createDataSource()
+            dataSource = DataSourceFactory.create(plugin, settings)
             dataSource!!.connection.use { connection ->
-                createSchema(connection)
-                applySchemaVersion(connection, 1)
+                SchemaMigrator.initialize(connection, settings.type)
             }
             plugin.logger.info("[DreamKillEcho] Storage started with ${settings.type}.")
         } catch (ex: Exception) {
@@ -56,7 +56,7 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
                 profiles.computeIfAbsent(uuid) { PlayerProfile(uuid, name) }.also { it.name = name }
             } else {
                 loadOrCreateProfile(uuid, name).also { profiles[uuid] = it }
-                loadOrCreateStats(uuid).also { stats[uuid] = it }
+                loadOrCreateStats(uuid).also { loaded -> synchronized(statsLock) { stats[uuid] = loaded } }
                 profiles[uuid]!!
             }
         }, executor).exceptionally { throwable ->
@@ -71,7 +71,7 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     fun stats(uuid: UUID): PlayerStats {
-        return stats.computeIfAbsent(uuid) { PlayerStats(uuid) }
+        return synchronized(statsLock) { stats.computeIfAbsent(uuid) { PlayerStats(uuid) }.copy() }
     }
 
     fun markProfileDirty(uuid: UUID) {
@@ -80,8 +80,37 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     fun markStatsDirty(uuid: UUID) {
-        stats(uuid).updatedAt = System.currentTimeMillis()
-        dirtyStats += uuid
+        synchronized(statsLock) {
+            stats.computeIfAbsent(uuid) { PlayerStats(uuid) }.updatedAt = System.currentTimeMillis()
+            dirtyStats += uuid
+        }
+    }
+
+    fun recordDeath(victimUuid: UUID, killerUuid: UUID?, countStats: Boolean): StatsUpdateResult {
+        return synchronized(statsLock) {
+            val victimStats = stats.computeIfAbsent(victimUuid) { PlayerStats(victimUuid) }
+            val previousVictimStreak = victimStats.currentStreak
+            victimStats.deaths += 1
+            victimStats.currentStreak = 0
+            victimStats.updatedAt = System.currentTimeMillis()
+            dirtyStats += victimUuid
+
+            var killerStreak = 0
+            var killerMaxStreak = 0
+            if (killerUuid != null && countStats) {
+                val killerStats = stats.computeIfAbsent(killerUuid) { PlayerStats(killerUuid) }
+                killerStats.kills += 1
+                killerStats.currentStreak += 1
+                killerStats.maxStreak = killerStats.maxStreak.coerceAtLeast(killerStats.currentStreak)
+                killerStats.lastVictimUuid = victimUuid
+                killerStats.lastKillTime = System.currentTimeMillis()
+                killerStats.updatedAt = System.currentTimeMillis()
+                dirtyStats += killerUuid
+                killerStreak = killerStats.currentStreak
+                killerMaxStreak = killerStats.maxStreak
+            }
+            StatsUpdateResult(previousVictimStreak, killerStreak, killerMaxStreak, victimStats.maxStreak)
+        }
     }
 
     fun logKill(log: KillLog) {
@@ -110,7 +139,9 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
         return CompletableFuture.runAsync({
             if (degraded) return@runAsync
             val profileIds = dirtyProfiles.toList()
-            val statIds = dirtyStats.toList()
+            val statCopies = synchronized(statsLock) {
+                dirtyStats.toList().mapNotNull { uuid -> stats[uuid]?.copy() }
+            }
             dataSource?.connection?.use { connection ->
                 connection.autoCommit = false
                 try {
@@ -118,9 +149,9 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
                         profiles[uuid]?.let { saveProfile(connection, it) }
                         dirtyProfiles -= uuid
                     }
-                    for (uuid in statIds) {
-                        stats[uuid]?.let { saveStats(connection, it) }
-                        dirtyStats -= uuid
+                    for (copy in statCopies) {
+                        saveStats(connection, copy)
+                        dirtyStats -= copy.uuid
                     }
                     connection.commit()
                 } catch (ex: Exception) {
@@ -140,7 +171,11 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
         return CompletableFuture.supplyAsync({
             val column = if (type.equals("streak", true)) "max_streak" else "kills"
             if (degraded) {
-                stats.values.sortedByDescending { if (column == "max_streak") it.maxStreak else it.kills }.take(limit)
+                synchronized(statsLock) {
+                    stats.values.map { it.copy() }
+                        .sortedByDescending { if (column == "max_streak") it.maxStreak else it.kills }
+                        .take(limit)
+                }
             } else {
                 dataSource?.connection?.use { connection ->
                     connection.prepareStatement("SELECT * FROM stats ORDER BY $column DESC LIMIT ?").use { ps ->
@@ -157,60 +192,17 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     fun resetStats(uuid: UUID) {
-        stats[uuid] = PlayerStats(uuid)
-        markStatsDirty(uuid)
+        synchronized(statsLock) {
+            stats[uuid] = PlayerStats(uuid)
+            dirtyStats += uuid
+        }
     }
 
     fun shutdown() {
-        flushAsync().join()
+        runCatching { flushAsync().get(5, TimeUnit.SECONDS) }
+            .onFailure { plugin.logger.warning("[DreamKillEcho] Timed out while flushing storage on shutdown: ${it.message}") }
         dataSource?.close()
         executor.shutdown()
-    }
-
-    private fun createDataSource(): HikariDataSource {
-        val config = HikariConfig()
-        when (settings.type) {
-            "mysql" -> {
-                Class.forName("com.mysql.cj.jdbc.Driver")
-                config.jdbcUrl = "jdbc:mysql://${settings.mysql.host}:${settings.mysql.port}/${settings.mysql.database}?useSSL=false&characterEncoding=utf8&serverTimezone=UTC"
-                config.username = settings.mysql.username
-                config.password = settings.mysql.password
-                config.maximumPoolSize = settings.mysql.maximumPoolSize
-                config.minimumIdle = settings.mysql.minimumIdle
-                config.connectionTimeout = settings.mysql.connectionTimeout
-            }
-            else -> {
-                Class.forName("org.sqlite.JDBC")
-                val dbFile = File(plugin.dataFolder, settings.sqliteFile)
-                dbFile.parentFile?.mkdirs()
-                config.jdbcUrl = "jdbc:sqlite:${dbFile.absolutePath}"
-                config.maximumPoolSize = 1
-            }
-        }
-        config.poolName = "DreamKillEchoPool"
-        return HikariDataSource(config)
-    }
-
-    private fun createSchema(connection: Connection) {
-        connection.createStatement().use { st ->
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS players(uuid VARCHAR(36) PRIMARY KEY,name VARCHAR(32) NOT NULL,selected_theme VARCHAR(64) NOT NULL,custom_message TEXT,custom_message_status VARCHAR(16) NOT NULL,custom_message_updated_at BIGINT NOT NULL,receive_broadcast BOOLEAN NOT NULL,created_at BIGINT NOT NULL,updated_at BIGINT NOT NULL)")
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS stats(uuid VARCHAR(36) PRIMARY KEY,kills INTEGER NOT NULL,deaths INTEGER NOT NULL,current_streak INTEGER NOT NULL,max_streak INTEGER NOT NULL,last_victim_uuid VARCHAR(36),last_kill_time BIGINT NOT NULL,updated_at BIGINT NOT NULL)")
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS kill_logs(id INTEGER PRIMARY KEY ${if (settings.type == "mysql") "AUTO_INCREMENT" else "AUTOINCREMENT"},killer_uuid VARCHAR(36),victim_uuid VARCHAR(36) NOT NULL,weapon VARCHAR(128) NOT NULL,world VARCHAR(128) NOT NULL,death_cause VARCHAR(64) NOT NULL,distance DOUBLE NOT NULL,created_at BIGINT NOT NULL)")
-            st.executeUpdate("CREATE TABLE IF NOT EXISTS schema_version(version INTEGER PRIMARY KEY,applied_at BIGINT NOT NULL)")
-        }
-    }
-
-    private fun applySchemaVersion(connection: Connection, version: Int) {
-        val sql = if (settings.type == "mysql") {
-            "INSERT IGNORE INTO schema_version(version,applied_at) VALUES(?,?)"
-        } else {
-            "INSERT OR IGNORE INTO schema_version(version,applied_at) VALUES(?,?)"
-        }
-        connection.prepareStatement(sql).use { ps ->
-            ps.setInt(1, version)
-            ps.setLong(2, System.currentTimeMillis())
-            ps.executeUpdate()
-        }
     }
 
     private fun loadOrCreateProfile(uuid: UUID, name: String): PlayerProfile {

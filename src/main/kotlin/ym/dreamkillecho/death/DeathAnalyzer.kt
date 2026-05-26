@@ -1,6 +1,7 @@
 package ym.dreamkillecho.death
 
 import org.bukkit.Material
+import org.bukkit.entity.LivingEntity
 import org.bukkit.entity.Player
 import org.bukkit.entity.Projectile
 import org.bukkit.event.entity.EntityDamageByEntityEvent
@@ -15,15 +16,21 @@ class DeathAnalyzer(private val messages: MessageService) {
         val victim = event.entity
         val damage = victim.lastDamageCause
         val killer = findKiller(victim, damage)
+        val mobName = findMobName(damage)
         val weapon = findWeapon(killer, damage)
         val distance = if (killer != null && killer.world == victim.world) killer.location.distance(victim.location) else 0.0
+        val cause = mapCause(damage?.cause)
         return DeathContext(
             victim = victim,
             killer = killer,
+            mobName = mobName,
             weapon = weapon,
             world = victim.world.name,
-            deathCause = mapCause(damage?.cause),
-            distance = distance
+            deathCause = cause,
+            broadcastKey = if (killer != null) "player" else if (cause == "projectile") "projectile" else if (mobName != null) "mob" else cause,
+            distance = distance,
+            killerIp = killer?.address?.address?.hostAddress,
+            victimIp = victim.address?.address?.hostAddress
         )
     }
 
@@ -36,6 +43,18 @@ class DeathAnalyzer(private val messages: MessageService) {
             val shooter = damager.shooter
             if (shooter is Player) return shooter
         }
+        return null
+    }
+
+    private fun findMobName(damage: EntityDamageEvent?): String? {
+        if (damage !is EntityDamageByEntityEvent) return null
+        val damager = damage.damager
+        if (damager is Projectile) {
+            val shooter = damager.shooter
+            if (shooter is LivingEntity && shooter !is Player) return shooter.name
+            return damager.type.name.lowercase().replace('_', ' ')
+        }
+        if (damager is LivingEntity && damager !is Player) return damager.name
         return null
     }
 
@@ -77,6 +96,7 @@ class DeathAnalyzer(private val messages: MessageService) {
         context.placeholders += mapOf(
             "killer" to (killer?.name ?: messages.raw("unknown-player")),
             "victim" to context.victim.name,
+            "mob" to (context.mobName ?: messages.raw("unknown-player")),
             "weapon" to context.weapon,
             "world" to context.world,
             "killer_health" to formatHealth(killer?.health ?: 0.0),

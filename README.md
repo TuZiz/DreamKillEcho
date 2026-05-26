@@ -26,7 +26,7 @@ Folia 兼容通过 `SchedulerAdapter` 运行时检测完成，业务代码禁止
 
 1. 执行 `mvn clean package`。
 2. 将 `target/DreamKillEcho-1.0.0.jar` 放入服务器 `plugins` 目录。
-3. 启动服务器，修改生成的 `config.yml`、`themes.yml`、`lang/zh_cn.yml`、`storage.yml`。
+3. 启动服务器，修改生成的 `config.yml`、`themes.yml`、`lang/zh_cn.yml`、`lang/en_us.yml`、`storage.yml`。
 4. 使用 `/dke reload` 热重载非存储连接类型配置。修改 `storage.type` 后需要重启。
 
 ## Maven 构建
@@ -89,7 +89,7 @@ mvn clean package
 ## 配置说明
 
 - `config.yml`：世界限制、广播范围、名片、特效、连杀、防刷、刷新周期。
-- `lang/zh_cn.yml`：所有可见消息。不要在源码里写用户可见中文。
+- `lang/zh_cn.yml` / `lang/en_us.yml`：所有可见消息。`config.yml` 中的 `language.default` 优先读取，缺失 key 时回退 `language.fallback`。
 - `themes.yml`：击杀主题、展示名、权限、MiniMessage 模板。
 - `storage.yml`：SQLite / MySQL 连接配置。
 

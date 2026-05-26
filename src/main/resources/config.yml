@@ -1,6 +1,13 @@
 # 服务器显示名，会用于 <server> 占位符。
 server-name: "DreamServer"
 
+# 语言设置：
+# default 是优先使用的语言文件，对应 plugins/DreamKillEcho/lang/zh_cn.yml。
+# fallback 是回退语言；default 缺少 key 时会读取 fallback。
+language:
+  default: "zh_cn"
+  fallback: "en_us"
+
 # 世界限制：
 # mode 支持 blacklist / whitelist。
 # blocked-world-* 表示命中限制世界时是否仍然允许对应行为。
@@ -29,14 +36,13 @@ card:
   mode: killer
   nearby-range: 64.0
   lines:
-    - "<gray>━━━━━━━━━━━━━━━━"
-    - "<white>击杀者：<killer>"
-    - "<white>受害者：<victim>"
-    - "<white>武器：<weapon>"
-    - "<white>距离：<distance> 格"
-    - "<white>剩余血量：<killer_health>❤"
-    - "<white>当前连杀：<streak>"
-    - "<gray>━━━━━━━━━━━━━━━━"
+    - "<gradient:#8ec5ff:#e0c3fc><strikethrough>                                </strikethrough></gradient>"
+    - " <dark_gray>▪</dark_gray> <gray>击杀者</gray> <dark_gray>»</dark_gray> <#a8e6cf><killer></#a8e6cf>"
+    - " <dark_gray>▪</dark_gray> <gray>受害者</gray> <dark_gray>»</dark_gray> <#ff6b6b><victim></#ff6b6b>"
+    - " <dark_gray>▪</dark_gray> <gray>武  器</gray> <dark_gray>»</dark_gray> <white><weapon></white>"
+    - " <dark_gray>▪</dark_gray> <gray>距  离</gray> <dark_gray>»</dark_gray> <#ffd966><distance></#ffd966> <gray>格</gray>"
+    - " <dark_gray>▪</dark_gray> <gray>状  态</gray> <dark_gray>»</dark_gray> <#ff6b6b><killer_health>❤</#ff6b6b> <dark_gray>|</dark_gray> <#e0c3fc><streak>连杀</#e0c3fc>"
+    - "<gradient:#e0c3fc:#8ec5ff><strikethrough>                                </strikethrough></gradient>"
 
 # 击杀展示特效，只做视觉与声音展示，不提供任何战斗收益。
 # global-limit-per-minute 是全局特效限流，避免粒子、烟花刷屏。
@@ -45,11 +51,11 @@ effects:
   global-limit-per-minute: 30
   title:
     enabled: true
-    title: "<gold>击杀</gold>"
-    subtitle: "<killer> <gray>终结了</gray> <victim>"
+    title: "<gradient:#ff6b6b:#ff8e8b><b>击 杀</b></gradient>"
+    subtitle: "<#a8e6cf><killer></#a8e6cf> <gray>终结了</gray> <#ff6b6b><victim></#ff6b6b>"
   actionbar:
     enabled: true
-    message: "<yellow>当前连杀：<streak>"
+    message: "<#ffd966>⚡ 当前连杀: <b><streak></b></#ffd966>"
   sound:
     enabled: true
     name: "entity.player.levelup"
@@ -66,7 +72,7 @@ effects:
   bossbar:
     enabled: false
     seconds: 5
-    message: "<gold><killer> 击杀了 <victim></gold>"
+    message: "<#8ec5ff><killer></#8ec5ff> <gray>⚔</gray> <#ff6b6b><victim></#ff6b6b>"
 
 # 自定义击杀语安全设置。
 # denied-tags 默认拦截 click、hover、selector、nbt 等不适合玩家自由输入的 MiniMessage 标签。
@@ -91,12 +97,12 @@ custom-message:
 streaks:
   enabled: true
   messages:
-    3: "<gold><killer> 达成 3 连杀！</gold>"
-    5: "<red><killer> 达成 5 连杀！</red>"
-    8: "<dark_red><killer> 达成 8 连杀！</dark_red>"
-    10: "<gradient:#ffcc00:#ff0066><killer> 达成 10 连杀！</gradient>"
-  shutdown-message: "<aqua><killer> 终结了 <victim> 的 <streak> 连杀！</aqua>"
-  revenge-message: "<light_purple><killer> 完成了对 <victim> 的复仇！</light_purple>"
+    3: "<#ffd966><b>[连杀]</b> <killer> 势不可挡，达成了 3 连杀！</#ffd966>"
+    5: "<#ff8e8b><b>[暴走]</b> <killer> 已经主宰战场，达成 5 连杀！</#ff8e8b>"
+    8: "<#ff6b6b><b>[超神]</b> 谁能赐死？！<killer> 达成 8 连杀！</#ff6b6b>"
+    10: "<gradient:#ff0066:#ffcc00><b>[传说]</b> 宛如神明降临！<killer> 达成 10 连杀！</gradient>"
+  shutdown-message: "<#8ec5ff><b>[终结]</b> <killer> 终结了 <victim> 的 <streak> 连杀！</#8ec5ff>"
+  revenge-message: "<#e0c3fc><b>[复仇]</b> 宿命的对决！<killer> 成功对 <victim> 完成了复仇！</#e0c3fc>"
 
 # 防刷屏规则，只影响播报与展示，不影响正常击杀事件。
 anti-spam:

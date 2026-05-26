@@ -12,3 +12,9 @@
 10. 禁止在异步线程操作 Bukkit 实体、世界、粒子、声音、BossBar。
 11. PlaceholderAPI 必须保持 softdepend，不允许作为强依赖使用。
 12. VIP / SVIP 功能只能是展示型、装饰型、个性化功能。
+13. 禁止超大类和超大 package；命令必须拆成 CommandRouter + SubCommand，复杂业务按领域拆分。
+14. 语言系统必须支持 `lang/zh_cn.yml` 与 `lang/en_us.yml`，默认语言缺失 key 时必须回退 fallback。
+15. Folia 下给玩家发送消息、Title、ActionBar、BossBar 必须走 per-player `SchedulerAdapter.runEntity(player)`。
+16. 新增或修改配置字段时必须让字段真实生效，不能只写进 `config.yml` 但业务不读取。
+17. 统计数据修改必须串行化或加锁，禁止多个线程直接修改同一个可变 `PlayerStats`。
+18. 环境死亡和生物击杀必须走语言文件 `broadcast.*` 消息，不能伪装成未知玩家击杀。

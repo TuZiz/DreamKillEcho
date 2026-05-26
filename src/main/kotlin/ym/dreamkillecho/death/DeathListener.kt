@@ -27,31 +27,23 @@ class DeathListener(private val services: PluginServices) : Listener {
         val context = services.deathAnalyzer.analyze(event)
         val worldAllowed = services.config.settings.worldRules.allowed(context.world)
         val process = services.antiAbuse.evaluate(context)
-        val victimStats = services.storage.stats(context.victim.uniqueId)
-        val previousVictimStreak = victimStats.currentStreak
-        services.deathAnalyzer.fillPlaceholders(context, 0, victimStats.maxStreak, services.messages.prefix, "default", services.config.settings.serverName)
+        val existingVictimStats = services.storage.stats(context.victim.uniqueId)
+        var previousVictimStreak = existingVictimStats.currentStreak
+        services.deathAnalyzer.fillPlaceholders(context, 0, existingVictimStats.maxStreak, services.messages.prefix, "default", services.config.settings.serverName)
         if (worldAllowed || services.config.settings.worldRules.blockedWorldStats) {
-            victimStats.deaths += 1
-            victimStats.currentStreak = 0
-            services.storage.markStatsDirty(context.victim.uniqueId)
+            val update = services.storage.recordDeath(context.victim.uniqueId, context.killer?.uniqueId, process.countStats)
+            previousVictimStreak = update.previousVictimStreak
             if (context.killer != null && process.countStats) {
-                val killerStats = services.storage.stats(context.killer.uniqueId)
-                killerStats.kills += 1
-                killerStats.currentStreak += 1
-                killerStats.maxStreak = killerStats.maxStreak.coerceAtLeast(killerStats.currentStreak)
-                killerStats.lastVictimUuid = context.victim.uniqueId
-                killerStats.lastKillTime = System.currentTimeMillis()
-                services.storage.markStatsDirty(context.killer.uniqueId)
                 services.deathAnalyzer.fillPlaceholders(
                     context,
-                    killerStats.currentStreak,
-                    killerStats.maxStreak,
+                    update.killerStreak,
+                    update.killerMaxStreak,
                     services.messages.prefix,
                     services.themes.firstAvailable(context.killer, services.storage.profile(context.killer.uniqueId, context.killer.name).selectedTheme).displayName,
                     services.config.settings.serverName
                 )
             } else {
-                services.deathAnalyzer.fillPlaceholders(context, 0, victimStats.maxStreak, services.messages.prefix, "default", services.config.settings.serverName)
+                services.deathAnalyzer.fillPlaceholders(context, 0, update.victimMaxStreak, services.messages.prefix, "default", services.config.settings.serverName)
             }
         }
         if ((worldAllowed || services.config.settings.worldRules.blockedWorldBroadcast) && process.shouldBroadcast) {

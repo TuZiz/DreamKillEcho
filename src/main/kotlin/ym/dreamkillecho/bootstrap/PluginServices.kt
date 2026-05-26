@@ -46,7 +46,7 @@ class PluginServices(
             val themes = ThemeService(plugin, config.themes)
             val analyzer = DeathAnalyzer(messages)
             val antiAbuse = AntiAbuseService(config.settings)
-            val broadcast = BroadcastService(config.settings, messages, themes, storage)
+            val broadcast = BroadcastService(scheduler, config.settings, messages, themes, storage)
             val effects = EffectService(scheduler, messages, config.settings)
             val custom = CustomMessageService(config.settings.custom, storage)
             return PluginServices(plugin, scheduler, config, messages, storage, themes, analyzer, antiAbuse, broadcast, effects, custom)

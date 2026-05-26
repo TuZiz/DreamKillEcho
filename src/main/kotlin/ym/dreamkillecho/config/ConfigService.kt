@@ -7,16 +7,26 @@ import java.io.File
 class ConfigService private constructor(
     val settings: PluginSettings,
     val language: YamlConfiguration,
+    val fallbackLanguage: YamlConfiguration,
     val themes: YamlConfiguration,
     val storage: StorageSettings
 ) {
     companion object {
         fun load(plugin: JavaPlugin): ConfigService {
             val config = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "config.yml"))
-            val language = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "lang/zh_cn.yml"))
+            val languageSettings = parseLanguage(config)
+            val language = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "lang/${languageSettings.defaultLanguage}.yml"))
+            val fallbackLanguage = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "lang/${languageSettings.fallbackLanguage}.yml"))
             val themes = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "themes.yml"))
             val storageYaml = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "storage.yml"))
-            return ConfigService(parseSettings(config), language, themes, parseStorage(storageYaml))
+            return ConfigService(parseSettings(config), language, fallbackLanguage, themes, parseStorage(storageYaml))
+        }
+
+        private fun parseLanguage(yaml: YamlConfiguration): LanguageSettings {
+            return LanguageSettings(
+                defaultLanguage = yaml.getString("language.default", "zh_cn")!!,
+                fallbackLanguage = yaml.getString("language.fallback", "en_us")!!
+            )
         }
 
         private fun parseSettings(yaml: YamlConfiguration): PluginSettings {
@@ -25,6 +35,7 @@ class ConfigService private constructor(
                 key.toIntOrNull()?.let { it to streakSection!!.getString(key, "")!! }
             }.toMap()
             return PluginSettings(
+                language = parseLanguage(yaml),
                 serverName = yaml.getString("server-name", "DreamServer")!!,
                 worldRules = WorldRules(
                     mode = yaml.getString("worlds.mode", "blacklist")!!,
