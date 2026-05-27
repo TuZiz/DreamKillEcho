@@ -47,7 +47,6 @@ mvn clean package
 - `/dke toggle`
 - `/dke gui`
 - `/dke theme list`
-- `/dke theme gui`
 - `/dke theme set <theme>`
 - `/dke theme preview <theme>`
 - `/dke custom set <message>`

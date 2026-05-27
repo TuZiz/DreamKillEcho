@@ -58,7 +58,7 @@ class CommandRouter(private val plugin: DreamKillEcho) : CommandExecutor, TabCom
         if (!sender.hasPermission(Permissions.USE)) return emptyList()
         val current = services ?: return emptyList()
         if (args.size == 1) {
-            return subCommands.flatMap { it.names }.distinct().filter { it.startsWith(args[0], true) }
+            return subCommands.flatMap { it.visibleNames }.distinct().filter { it.startsWith(args[0], true) }
         }
         val sub = subCommands.firstOrNull { args[0].lowercase() in it.names } ?: return emptyList()
         return sub.tab(sender, args.drop(1), CommandContext(plugin, current, args[0].lowercase()))

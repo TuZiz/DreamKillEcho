@@ -12,6 +12,8 @@ data class CommandContext(
 
 interface SubCommand {
     val names: Set<String>
+    val visibleNames: Set<String>
+        get() = names.firstOrNull()?.let { setOf(it) }.orEmpty()
     fun execute(sender: CommandSender, args: List<String>, context: CommandContext): Boolean
     fun tab(sender: CommandSender, args: List<String>, context: CommandContext): List<String> = emptyList()
 }
