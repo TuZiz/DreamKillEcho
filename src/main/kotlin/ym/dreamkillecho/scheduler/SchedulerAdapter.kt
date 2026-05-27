@@ -10,6 +10,11 @@ import java.util.function.Consumer
 
 interface SchedulerAdapter {
     val platformName: String
+    /**
+     * Global/main-safe execution. On Folia this is the global region scheduler,
+     * so entity or location specific Bukkit operations must still use runEntity
+     * or runLocation.
+     */
     fun runMain(task: () -> Unit)
     fun runAsync(task: () -> Unit)
     fun runLater(delayTicks: Long, task: () -> Unit)

@@ -25,8 +25,9 @@ class ThemeService(private val plugin: JavaPlugin, yaml: YamlConfiguration) {
     fun isUnlocked(player: Player, theme: KillTheme): Boolean = player.hasPermission(theme.permission)
 
     fun select(player: Player, theme: KillTheme, storage: StorageService) {
-        storage.profile(player.uniqueId, player.name).selectedTheme = theme.id
-        storage.markProfileDirty(player.uniqueId)
+        storage.updateProfile(player.uniqueId, player.name) { profile ->
+            profile.selectedTheme = theme.id
+        }
     }
 
     fun firstAvailable(player: Player, selected: String?): KillTheme {

@@ -19,3 +19,6 @@
 17. 统计数据修改必须串行化或加锁，禁止多个线程直接修改同一个可变 `PlayerStats`。
 18. 环境死亡和生物击杀必须走语言文件 `broadcast.*` 消息，不能伪装成未知玩家击杀。
 19. 主题仓库 GUI 使用 `gui/theme-menu.yml` 的 `Title` + `GuiPlain` + `GuiKey` + `templates` 结构；`@` 作为自动分页内容位，主题列表必须由 `themes.yml` 自动分页承载，新增主题不要再手工同步 GUI 按钮位，不要把可美化 GUI 文案写死在业务源码中。
+20. 修改 `PlayerProfile` 的主题、自定义击杀语、审核状态、播报开关等持久化字段时，必须通过 `StorageService.updateProfile(...)`，禁止外部业务直接修改 profile 后再手工标记 dirty。
+21. 新增或修改数据库字段、索引、查询优化时，必须写入幂等 schema migration，并同时兼容 SQLite 与 MySQL。
+22. Folia 下不得跨区域读取玩家位置、血量、IP 等实体状态；无法可靠实现的能力必须降级并在 README 或日志中说明。

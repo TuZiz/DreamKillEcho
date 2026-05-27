@@ -16,8 +16,8 @@ class PlayerRepository {
     }
 
     fun findByName(connection: Connection, name: String): PlayerProfile? {
-        connection.prepareStatement("SELECT * FROM players WHERE LOWER(name)=LOWER(?) ORDER BY updated_at DESC LIMIT 1").use { ps ->
-            ps.setString(1, name)
+        connection.prepareStatement("SELECT * FROM players WHERE name_lower=? ORDER BY updated_at DESC LIMIT 1").use { ps ->
+            ps.setString(1, name.lowercase())
             ps.executeQuery().use { rs -> if (rs.next()) return read(rs) }
         }
         return null
@@ -35,16 +35,17 @@ class PlayerRepository {
     }
 
     fun save(connection: Connection, profile: PlayerProfile) {
-        connection.prepareStatement("REPLACE INTO players(uuid,name,selected_theme,custom_message,custom_message_status,custom_message_updated_at,receive_broadcast,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)").use { ps ->
+        connection.prepareStatement("REPLACE INTO players(uuid,name,name_lower,selected_theme,custom_message,custom_message_status,custom_message_updated_at,receive_broadcast,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)").use { ps ->
             ps.setString(1, profile.uuid.toString())
             ps.setString(2, profile.name)
-            ps.setString(3, profile.selectedTheme)
-            ps.setString(4, profile.customMessage)
-            ps.setString(5, profile.customMessageStatus.name)
-            ps.setLong(6, profile.customMessageUpdatedAt)
-            ps.setBoolean(7, profile.receiveBroadcast)
-            ps.setLong(8, profile.createdAt)
-            ps.setLong(9, profile.updatedAt)
+            ps.setString(3, profile.name.lowercase())
+            ps.setString(4, profile.selectedTheme)
+            ps.setString(5, profile.customMessage)
+            ps.setString(6, profile.customMessageStatus.name)
+            ps.setLong(7, profile.customMessageUpdatedAt)
+            ps.setBoolean(8, profile.receiveBroadcast)
+            ps.setLong(9, profile.createdAt)
+            ps.setLong(10, profile.updatedAt)
             ps.executeUpdate()
         }
     }

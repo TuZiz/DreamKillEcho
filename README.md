@@ -10,18 +10,20 @@ DreamKillEcho 是一个 Kotlin + Maven 编写的 Minecraft 击杀播报 / 死亡
 - 击杀名片：可配置内容，支持仅击杀者、全服、附近玩家。
 - 自定义击杀语：长度限制、冷却、敏感词过滤、危险 MiniMessage 标签拦截、审核模式。
 - 连杀系统：kills、deaths、current_streak、max_streak、终结连杀、复仇击杀。
-- 防刷屏 / 防刷击杀：同击杀者、同受害者、每分钟广播与特效限流、同受害者反复击杀限制。
+- 防刷屏 / 防刷击杀：同击杀者、同受害者、每分钟广播与特效限流、同受害者反复击杀限制，并对反刷记录做 TTL 清理。
 - 世界限制：blacklist / whitelist，可分别控制播报、统计、特效。
 - 玩家开关：`/dke toggle` 持久化关闭接收普通播报。
 - GUI 主题仓库：`/dke gui` 或 `/dke theme gui` 打开可美化菜单，主题列表按 `themes.yml` 自动分页，新增主题无需同步改按钮位。
 - SQLite 默认存储，MySQL 可选，HikariCP 连接池。
-- PlaceholderAPI softdepend，存在时通过反射解析占位符。
+- PlaceholderAPI softdepend，存在时通过缓存后的反射桥接解析占位符。
 
 ## 兼容说明
 
 项目使用 Spigot API 作为编译 API，目标 Minecraft 1.21.x，`plugin.yml` 声明 `api-version: '1.21'` 与 `folia-supported: true`。
 
 Folia 兼容通过 `SchedulerAdapter` 运行时检测完成，业务代码禁止直接 import Folia 专属类。Folia 环境下实体操作走 entity scheduler，位置操作走 region scheduler，异步任务走 async scheduler；Spigot / Paper 环境下回退 BukkitScheduler。
+
+Folia 下不会直接跨区域读取击杀者位置、血量或 IP。`anti-farm.same-ip-no-stats` 在 Folia 环境会降级为不生效，并在控制台输出警告，避免跨区域线程风险。
 
 ## 安装方式
 
@@ -94,6 +96,8 @@ mvn clean package
 
 - `config.yml`：世界限制、广播范围、名片、特效、连杀、防刷、刷新周期。
 - `effects.bossbar.seconds`：BossBar 展示秒数，最小值为 1，默认 5。
+- `anti-farm.same-victim-record-ttl-seconds`：同一击杀者/受害者反刷记录保留时间，默认 600 秒，惰性清理以避免长期运行内存增长。
+- `anti-farm.revenge-window-seconds`：复仇判定窗口，默认 600 秒，超过窗口的反向击杀不再触发复仇播报。
 - `lang/zh_cn.yml` / `lang/en_us.yml`：所有可见消息。`config.yml` 中的 `language.default` 优先读取，缺失 key 时回退 `language.fallback`。
 - `themes.yml`：击杀主题、展示名、权限、自动选择优先级 `priority`、MiniMessage 模板。`priority` 越高，玩家未手动选择主题时越优先自动使用。
 - `gui/theme-menu.yml`：主题仓库 GUI 的标题、`GuiPlain` 布局、`GuiKey` 物品样式、`templates` 主题物品模板。`@` 会自动承载 `themes.yml` 中的主题列表，新增主题通常不需要再改这个文件；修改后执行 `/dke reload` 生效。
@@ -124,7 +128,7 @@ mvn clean package
 
 ## PlaceholderAPI
 
-PlaceholderAPI 是 softdepend。插件存在时，MessageService 会通过反射调用 PlaceholderAPI 解析消息模板；不存在时自动跳过。
+PlaceholderAPI 是 softdepend。插件存在时，MessageService 会通过轻量 `PlaceholderBridge` 缓存 `setPlaceholders(Player, String)` 方法后解析消息模板；不存在时自动跳过，不会作为强依赖加载。
 
 ## SQLite / MySQL
 
@@ -150,13 +154,15 @@ mysql:
   password: "password"
 ```
 
-数据库不可用时插件进入降级模式，只使用内存缓存运行，控制台会输出警告。
+数据库不可用时插件进入降级模式，只使用内存缓存运行，控制台会输出警告。后续玩家加载、查询和定时 flush 会继续尝试重连；dirty profile / stats 不会因为一次 flush 失败被清除，数据库恢复后会尽量写回。
+
+启动时会执行幂等 schema migration。当前迁移会保留已有表结构，补充 `players.name_lower` 并填充历史数据，同时创建 `players.name_lower`、自定义消息审核、`stats.kills`、`stats.max_streak`、`kill_logs.created_at`、`kill_logs.killer_uuid`、`kill_logs.victim_uuid` 等索引，SQLite 与 MySQL 均按同一版本序列执行。
 
 ## 测试建议
 
 - Spigot：启动 1.21.1 Spigot，确认插件加载、`/dke help`、SQLite 建表、死亡播报。
 - Paper：启动 1.21.1 Paper，测试 PlaceholderAPI、粒子、声音、BossBar。
-- Folia：启动 Folia 1.21.x，重点测试击杀事件、实体特效、区域调度、退出保存。
+- Folia：启动 Folia 1.21.x，重点测试击杀事件、实体特效、区域调度、退出保存，并确认 `same-ip-no-stats` 降级日志符合预期。
 - MySQL：切换 `storage.type: mysql` 后重启，确认建表与数据持久化。
 
 ## 常见问题
@@ -170,6 +176,8 @@ mysql:
 ## Folia 注意事项
 
 不要在新增业务代码中直接调用 `Bukkit.getScheduler()`，不要 import Folia 专属类。实体、世界、粒子、声音、BossBar 操作必须通过 `SchedulerAdapter` 回到正确调度上下文。
+
+玩家 `PlayerProfile` 的主题、自定义击杀语、审核状态、播报开关等持久化字段必须通过 `StorageService.updateProfile(...)` 修改，避免并发 flush 读到半更新状态。
 
 ## TODO
 

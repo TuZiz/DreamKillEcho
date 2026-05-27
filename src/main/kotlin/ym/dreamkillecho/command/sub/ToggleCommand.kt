@@ -12,9 +12,9 @@ class ToggleCommand : SubCommand {
     override fun execute(sender: CommandSender, args: List<String>, context: CommandContext): Boolean {
         val player = CommandUtil.requirePlayer(sender, context.services) ?: return true
         if (!player.hasPermission(Permissions.TOGGLE)) return CommandUtil.deny(player, context.services)
-        val profile = context.services.storage.profile(player.uniqueId, player.name)
-        profile.receiveBroadcast = !profile.receiveBroadcast
-        context.services.storage.markProfileDirty(player.uniqueId)
+        val profile = context.services.storage.updateProfile(player.uniqueId, player.name) {
+            it.receiveBroadcast = !it.receiveBroadcast
+        }
         context.services.messages.send(player, if (profile.receiveBroadcast) "toggle-on" else "toggle-off")
         return true
     }

@@ -110,7 +110,9 @@ class ConfigService private constructor(
                     enabled = yaml.getBoolean("anti-farm.enabled", true),
                     sameVictimNoStatsSeconds = yaml.getLong("anti-farm.same-victim-no-stats-seconds", 60),
                     sameIpNoStats = yaml.getBoolean("anti-farm.same-ip-no-stats", false),
-                    maxSameVictimCountPerDay = yaml.getInt("anti-farm.max-same-victim-count-per-day", 5)
+                    maxSameVictimCountPerDay = yaml.getInt("anti-farm.max-same-victim-count-per-day", 5),
+                    sameVictimRecordTtlSeconds = yaml.getLong("anti-farm.same-victim-record-ttl-seconds", 600),
+                    revengeWindowSeconds = yaml.getLong("anti-farm.revenge-window-seconds", 600)
                 ),
                 flushIntervalSeconds = yaml.getLong("storage.flush-interval-seconds", 120)
             )

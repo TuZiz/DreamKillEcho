@@ -118,6 +118,10 @@ anti-farm:
   same-victim-no-stats-seconds: 60
   same-ip-no-stats: false
   max-same-victim-count-per-day: 5
+  # 同一击杀者/受害者 pair 的反刷记录保留时间，超时后惰性清理，避免长期运行内存增长。
+  same-victim-record-ttl-seconds: 600
+  # 复仇判定时间窗。超过该时间的反向击杀不再触发复仇播报。
+  revenge-window-seconds: 600
 
 # 缓存写回数据库的周期。数据库写入会走异步存储线程。
 storage:

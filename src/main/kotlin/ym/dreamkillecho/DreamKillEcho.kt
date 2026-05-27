@@ -41,7 +41,7 @@ class DreamKillEcho : JavaPlugin() {
                 schedulerAdapter.runMain {
                     services = built
                     executor.bind(built)
-                    server.pluginManager.registerEvents(DeathListener(built), this)
+                    server.pluginManager.registerEvents(DeathListener(this), this)
                     server.pluginManager.registerEvents(ThemeMenuListener(this), this)
                     built.storage.prepareOnlinePlayers()
                     built.startTimers()

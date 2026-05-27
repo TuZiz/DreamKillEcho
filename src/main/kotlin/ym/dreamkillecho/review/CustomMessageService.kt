@@ -23,20 +23,20 @@ class CustomMessageService(
         if (message.length > settings.maxLength) return CustomMessageResult.TOO_LONG
         if (settings.blockedWords.any { it.isNotBlank() && message.contains(it, ignoreCase = true) }) return CustomMessageResult.BLOCKED_WORD
         if (containsDeniedTag(message)) return CustomMessageResult.INVALID_TAG
-        val profile = storage.profile(player.uniqueId, player.name)
-        profile.customMessage = message
-        profile.customMessageUpdatedAt = System.currentTimeMillis()
-        profile.customMessageStatus = if (settings.requireReview) CustomMessageStatus.PENDING else CustomMessageStatus.APPROVED
-        storage.markProfileDirty(player.uniqueId)
+        storage.updateProfile(player.uniqueId, player.name) { profile ->
+            profile.customMessage = message
+            profile.customMessageUpdatedAt = System.currentTimeMillis()
+            profile.customMessageStatus = if (settings.requireReview) CustomMessageStatus.PENDING else CustomMessageStatus.APPROVED
+        }
         return if (settings.requireReview) CustomMessageResult.PENDING else CustomMessageResult.SAVED
     }
 
     fun reset(player: Player) {
-        val profile = storage.profile(player.uniqueId, player.name)
-        profile.customMessage = null
-        profile.customMessageStatus = CustomMessageStatus.NONE
-        profile.customMessageUpdatedAt = System.currentTimeMillis()
-        storage.markProfileDirty(player.uniqueId)
+        storage.updateProfile(player.uniqueId, player.name) { profile ->
+            profile.customMessage = null
+            profile.customMessageStatus = CustomMessageStatus.NONE
+            profile.customMessageUpdatedAt = System.currentTimeMillis()
+        }
     }
 
     fun pending(): List<PlayerProfile> {
@@ -49,19 +49,27 @@ class CustomMessageService(
     }
 
     fun approve(profile: PlayerProfile): Boolean {
-        if (profile.customMessageStatus != CustomMessageStatus.PENDING) return false
-        profile.customMessageStatus = CustomMessageStatus.APPROVED
-        profile.customMessageUpdatedAt = System.currentTimeMillis()
-        storage.markProfileDirty(profile.uuid)
-        return true
+        var changed = false
+        storage.updateProfile(profile.uuid, profile.name) {
+            if (it.customMessageStatus == CustomMessageStatus.PENDING) {
+                it.customMessageStatus = CustomMessageStatus.APPROVED
+                it.customMessageUpdatedAt = System.currentTimeMillis()
+                changed = true
+            }
+        }
+        return changed
     }
 
     fun deny(profile: PlayerProfile): Boolean {
-        if (profile.customMessageStatus != CustomMessageStatus.PENDING) return false
-        profile.customMessageStatus = CustomMessageStatus.DENIED
-        profile.customMessageUpdatedAt = System.currentTimeMillis()
-        storage.markProfileDirty(profile.uuid)
-        return true
+        var changed = false
+        storage.updateProfile(profile.uuid, profile.name) {
+            if (it.customMessageStatus == CustomMessageStatus.PENDING) {
+                it.customMessageStatus = CustomMessageStatus.DENIED
+                it.customMessageUpdatedAt = System.currentTimeMillis()
+                changed = true
+            }
+        }
+        return changed
     }
 
     private fun containsDeniedTag(message: String): Boolean {

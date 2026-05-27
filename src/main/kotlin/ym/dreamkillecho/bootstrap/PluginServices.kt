@@ -50,6 +50,9 @@ class PluginServices(
             val themeMenu = ThemeMenuService(plugin, scheduler, messages, themes, storage)
             val analyzer = DeathAnalyzer(messages, WeaponNameService(messages), scheduler.platformName)
             val antiAbuse = AntiAbuseService(config.settings)
+            if (scheduler.platformName.contains("Folia", ignoreCase = true) && config.settings.antiFarm.sameIpNoStats) {
+                plugin.logger.warning("[DreamKillEcho] anti-farm.same-ip-no-stats is degraded on Folia because cross-region killer address access is not reliable.")
+            }
             val broadcast = BroadcastService(scheduler, config.settings, messages, themes, storage)
             val effects = EffectService(scheduler, messages, config.settings)
             val custom = CustomMessageService(config.settings.custom, storage)

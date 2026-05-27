@@ -96,7 +96,9 @@ data class AntiFarmSettings(
     val enabled: Boolean,
     val sameVictimNoStatsSeconds: Long,
     val sameIpNoStats: Boolean,
-    val maxSameVictimCountPerDay: Int
+    val maxSameVictimCountPerDay: Int,
+    val sameVictimRecordTtlSeconds: Long,
+    val revengeWindowSeconds: Long
 )
 
 data class StorageSettings(

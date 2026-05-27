@@ -19,6 +19,7 @@ class MessageService(
 ) {
     private val miniMessage = MiniMessage.miniMessage()
     private val audiences = BukkitAudiences.create(plugin)
+    private val placeholderBridge = PlaceholderBridge(plugin)
     val prefix: String get() = raw("prefix")
 
     fun close() {
@@ -152,11 +153,7 @@ class MessageService(
     }
 
     private fun applyPlaceholderApi(template: String, player: Player?): String {
-        if (player == null || !plugin.server.pluginManager.isPluginEnabled("PlaceholderAPI")) return template
-        return runCatching {
-            val clazz = Class.forName("me.clip.placeholderapi.PlaceholderAPI")
-            clazz.getMethod("setPlaceholders", Player::class.java, String::class.java).invoke(null, player, template) as String
-        }.getOrDefault(template)
+        return placeholderBridge.apply(player, template)
     }
 
     private fun escapePlain(value: String): String {

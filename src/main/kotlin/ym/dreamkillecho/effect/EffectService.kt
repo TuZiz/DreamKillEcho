@@ -2,6 +2,7 @@ package ym.dreamkillecho.effect
 
 import org.bukkit.Color
 import org.bukkit.FireworkEffect
+import org.bukkit.Location
 import org.bukkit.Particle
 import org.bukkit.Sound
 import org.bukkit.entity.EntityType
@@ -41,11 +42,17 @@ class EffectService(
             if (settings.effects.particle.enabled && killer.hasPermission(Permissions.EFFECT_PARTICLE)) {
                 val particle = runCatching { Particle.valueOf(settings.effects.particle.name.uppercase()) }.getOrNull()
                 if (particle != null) {
-                    killer.world.spawnParticle(particle, killer.location.add(0.0, 1.0, 0.0), settings.effects.particle.count.coerceAtMost(settings.effects.particle.maxCount))
+                    val location = killer.location.clone().add(0.0, 1.0, 0.0)
+                    scheduler.runLocation(location) {
+                        location.world?.spawnParticle(particle, location, settings.effects.particle.count.coerceAtMost(settings.effects.particle.maxCount))
+                    }
                 }
             }
             if (settings.effects.firework.enabled && killer.hasPermission(Permissions.EFFECT_FIREWORK)) {
-                repeat(settings.effects.firework.maxPerKill.coerceIn(0, 2)) { spawnFirework(killer) }
+                val location = killer.location.clone()
+                repeat(settings.effects.firework.maxPerKill.coerceIn(0, 2)) {
+                    scheduler.runLocation(location) { spawnFirework(location) }
+                }
             }
             if (settings.effects.bossbar.enabled && killer.hasPermission(Permissions.EFFECT_BOSSBAR)) {
                 val bar = messages.showBossBar(killer, settings.effects.bossbar.message, context.placeholders, context.componentPlaceholders)
@@ -56,8 +63,8 @@ class EffectService(
         }
     }
 
-    private fun spawnFirework(player: Player) {
-        val firework = player.world.spawnEntity(player.location, EntityType.FIREWORK_ROCKET) as Firework
+    private fun spawnFirework(location: Location) {
+        val firework = location.world?.spawnEntity(location, EntityType.FIREWORK_ROCKET) as? Firework ?: return
         val meta: FireworkMeta = firework.fireworkMeta
         meta.power = 0
         meta.addEffect(FireworkEffect.builder().withColor(Color.AQUA, Color.YELLOW).with(FireworkEffect.Type.BALL).trail(false).flicker(true).build())

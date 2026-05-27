@@ -25,15 +25,23 @@ class BroadcastService(
     fun broadcast(context: DeathContext) {
         if (!settings.broadcast.enabled) return
         val killer = context.killer
-        val receivers = receivers(context)
         if (killer != null && foliaMode) {
             scheduler.runEntity(killer) {
                 val placeholders = context.placeholders.toMutableMap()
                 val template = playerKillTemplate(killer, context, placeholders)
-                sendTemplate(receivers, template, placeholders, context.componentPlaceholders, useCooldown = true)
+                scheduler.runMain {
+                    sendTemplate(receivers(context), template, placeholders, context.componentPlaceholders, useCooldown = true)
+                }
             }
             return
         }
+        if (foliaMode) {
+            scheduler.runMain {
+                sendTemplate(receivers(context), environmentTemplate(context), context.placeholders, context.componentPlaceholders, useCooldown = true)
+            }
+            return
+        }
+        val receivers = receivers(context)
         val template = if (killer != null) playerKillTemplate(killer, context, context.placeholders) else environmentTemplate(context)
         sendTemplate(receivers, template, context.placeholders, context.componentPlaceholders, useCooldown = true)
     }
@@ -44,12 +52,14 @@ class BroadcastService(
         if (foliaMode) {
             scheduler.runEntity(killer) {
                 if (!killer.hasPermission(Permissions.CARD_VIP) && !killer.hasPermission(Permissions.CARD_SVIP)) return@runEntity
-                val receivers = when (settings.card.mode.lowercase()) {
-                    "global" -> Bukkit.getOnlinePlayers().toList()
-                    "nearby" -> nearbyOrFallback(context, settings.card.nearbyRange)
-                    else -> listOf(killer)
+                scheduler.runMain {
+                    val receivers = when (settings.card.mode.lowercase()) {
+                        "global" -> Bukkit.getOnlinePlayers().toList()
+                        "nearby" -> nearbyOrFallback(context, settings.card.nearbyRange)
+                        else -> listOf(killer)
+                    }
+                    sendLines(receivers, settings.card.lines, context.placeholders, context.componentPlaceholders)
                 }
-                sendLines(receivers, settings.card.lines, context.placeholders, context.componentPlaceholders)
             }
             return
         }
@@ -66,17 +76,33 @@ class BroadcastService(
         if (!settings.streaks.enabled) return
         val killer = context.killer ?: return
         val streak = context.placeholders["streak"]?.toIntOrNull() ?: return
+        if (foliaMode) {
+            scheduler.runMain {
+                sendStreakTo(Bukkit.getOnlinePlayers().toList(), context, previousVictimStreak, revenge, streak)
+            }
+            return
+        }
+        sendStreakTo(Bukkit.getOnlinePlayers().toList(), context, previousVictimStreak, revenge, streak)
+    }
+
+    private fun sendStreakTo(
+        receivers: List<Player>,
+        context: DeathContext,
+        previousVictimStreak: Int,
+        revenge: Boolean,
+        streak: Int
+    ) {
         val streakTemplate = settings.streaks.messages[streak]
         if (streakTemplate != null) {
-            sendTemplate(Bukkit.getOnlinePlayers().toList(), streakTemplate, context.placeholders, context.componentPlaceholders, useCooldown = false)
+            sendTemplate(receivers, streakTemplate, context.placeholders, context.componentPlaceholders, useCooldown = false)
         }
         if (previousVictimStreak >= 3 && settings.streaks.shutdownMessage.isNotBlank()) {
             context.placeholders["streak"] = previousVictimStreak.toString()
-            sendTemplate(Bukkit.getOnlinePlayers().toList(), settings.streaks.shutdownMessage, context.placeholders, context.componentPlaceholders, useCooldown = false)
+            sendTemplate(receivers, settings.streaks.shutdownMessage, context.placeholders, context.componentPlaceholders, useCooldown = false)
             context.placeholders["streak"] = streak.toString()
         }
         if (revenge && settings.streaks.revengeMessage.isNotBlank()) {
-            sendTemplate(Bukkit.getOnlinePlayers().toList(), settings.streaks.revengeMessage, context.placeholders, context.componentPlaceholders, useCooldown = false)
+            sendTemplate(receivers, settings.streaks.revengeMessage, context.placeholders, context.componentPlaceholders, useCooldown = false)
         }
     }
 
