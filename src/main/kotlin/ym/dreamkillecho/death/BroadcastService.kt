@@ -139,7 +139,7 @@ class BroadcastService(
 
     private fun nearbyOrFallback(context: DeathContext, range: Double): List<Player> {
         if (foliaMode) return Bukkit.getOnlinePlayers().toList()
-        val center = context.killer?.location ?: context.victim.location
+        val center = context.killer?.location ?: context.victimLocation ?: return emptyList()
         val squared = range * range
         return center.world?.players?.filter { it.location.distanceSquared(center) <= squared }.orEmpty()
     }

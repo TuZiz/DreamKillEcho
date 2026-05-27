@@ -221,6 +221,7 @@ class ThemeMenuService(
             "priority" to theme.priority.toString(),
             "theme_priority" to theme.priority.toString(),
             "theme_status" to status,
+            "theme_message" to theme.message,
             "index" to absoluteIndex.toString(),
             "page" to (page + 1).toString(),
             "pages" to pageCount.toString()
@@ -232,7 +233,8 @@ class ThemeMenuService(
             "status" to messages.component(status, player, itemPlaceholders),
             "theme_status" to messages.component(status, player, itemPlaceholders),
             "current" to messages.component(currentTheme.displayName, player, itemPlaceholders),
-            "current_theme" to messages.component(currentTheme.displayName, player, itemPlaceholders)
+            "current_theme" to messages.component(currentTheme.displayName, player, itemPlaceholders),
+            "theme_preview" to messages.component(theme.message, player, themePreviewPlaceholders(player, theme.displayName))
         )
         return buildItem(
             template,
@@ -339,6 +341,25 @@ class ThemeMenuService(
             "page_size" to pageSize.toString(),
             "page_start" to pageStart.toString(),
             "page_end" to pageEnd.toString()
+        )
+    }
+
+    private fun themePreviewPlaceholders(player: Player, themeName: String): Map<String, String> {
+        return mapOf(
+            "killer" to player.name,
+            "victim" to "Steve",
+            "mob" to "Zombie",
+            "weapon" to "Diamond Sword",
+            "world" to player.world.name,
+            "killer_health" to "20",
+            "victim_health" to "0",
+            "distance" to "8.0",
+            "streak" to "3",
+            "max_streak" to "8",
+            "death_cause" to "preview",
+            "prefix" to messages.prefix,
+            "theme" to themeName,
+            "server" to plugin.server.name
         )
     }
 

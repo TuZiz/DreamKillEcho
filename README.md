@@ -179,6 +179,13 @@ mysql:
 
 玩家 `PlayerProfile` 的主题、自定义击杀语、审核状态、播报开关等持久化字段必须通过 `StorageService.updateProfile(...)` 修改，避免并发 flush 读到半更新状态。
 
+## Production hardening notes
+
+- Custom kill message permissions are layered: `dreamkillecho.custom.message` only allows setting a message; `dreamkillecho.custom.color` allows color, hex color, `gradient`, and `rainbow` tags; `dreamkillecho.custom.minimessage` allows the configured MiniMessage safe subset.
+- Player custom messages still reject `click`, `hover`, `insertion`, `selector`, `score`, `nbt`, `keybind`, and `translatable` tags even with `dreamkillecho.custom.minimessage`. Without `custom.minimessage`, player input is stored as escaped plain text and is not parsed as MiniMessage formatting.
+- On Folia, player-kill handling switches to the killer entity scheduler before reading killer name, weapon, health, location, theme, permissions, custom message, or effect state. `anti-farm.same-ip-no-stats` remains degraded on Folia because cross-region player IP reads are not reliable.
+- Kill log writes follow `worlds.blocked-world-stats`; worlds where stats are disabled do not write kill log rows.
+
 ## TODO
 
 - 第一版已实现核心可运行链路。后续可增强为更细粒度的死亡原因文案表、更多特效模板与单元测试覆盖。

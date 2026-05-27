@@ -44,13 +44,13 @@ class CommandRouter(private val plugin: DreamKillEcho) : CommandExecutor, TabCom
             if (current != null) {
                 CommandUtil.deny(sender, current)
             } else {
-                sender.sendMessage("No permission.")
+                sender.sendMessage(CommandUtil.FALLBACK_NO_PERMISSION)
             }
             return true
         }
         val current = services
         if (current == null) {
-            sender.sendMessage("DreamKillEcho is loading.")
+            sender.sendMessage(CommandUtil.FALLBACK_PLUGIN_NOT_READY)
             return true
         }
         val name = args.firstOrNull()?.lowercase() ?: "help"

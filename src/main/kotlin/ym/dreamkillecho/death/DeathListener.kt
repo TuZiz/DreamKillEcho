@@ -26,7 +26,6 @@ class DeathListener(private val plugin: DreamKillEcho) : Listener {
     @EventHandler
     fun onDeath(event: PlayerDeathEvent) {
         val services = plugin.services ?: return
-        val foliaMode = services.scheduler.platformName.contains("Folia", ignoreCase = true)
         if (!services.config.settings.broadcast.includeVanillaDeathMessage) event.deathMessage = null
         val context = services.deathAnalyzer.analyze(event)
         val rules = services.config.settings.worldRules
@@ -36,27 +35,46 @@ class DeathListener(private val plugin: DreamKillEcho) : Listener {
         val allowEffects = worldAllowed || rules.blockedWorldEffects
         if (!allowStats && !allowBroadcast && !allowEffects) return
 
+        val killer = context.killer
+        if (killer != null) {
+            services.scheduler.runEntity(killer) {
+                if (plugin.isEnabled) processDeath(context, allowStats, allowBroadcast, allowEffects)
+            }
+            return
+        }
+        processDeath(context, allowStats, allowBroadcast, allowEffects)
+    }
+
+    private fun processDeath(
+        context: DeathContext,
+        allowStats: Boolean,
+        allowBroadcast: Boolean,
+        allowEffects: Boolean
+    ) {
+        val services = plugin.services ?: return
+        val killer = context.killer
+        if (killer != null) {
+            services.deathAnalyzer.enrichKillerSnapshot(context, killer)
+        }
         val process = services.antiAbuse.evaluate(
             context = context,
             trackStats = allowStats,
             trackBroadcast = allowBroadcast,
             trackEffects = allowEffects
         )
-        val existingVictimStats = services.storage.stats(context.victim.uniqueId)
+        val existingVictimStats = services.storage.stats(context.victimUuid)
         var previousVictimStreak = existingVictimStats.currentStreak
-        services.deathAnalyzer.fillPlaceholders(context, 0, existingVictimStats.maxStreak, services.messages.prefix, "default", services.config.settings.serverName)
+        val themeName = killer?.let {
+            services.themes.firstAvailable(
+                it,
+                services.storage.profile(it.uniqueId, it.name).selectedTheme
+            ).displayName
+        } ?: "default"
+        services.deathAnalyzer.fillPlaceholders(context, 0, existingVictimStats.maxStreak, services.messages.prefix, themeName, services.config.settings.serverName)
         if (allowStats) {
-            val update = services.storage.recordDeath(context.victim.uniqueId, context.killer?.uniqueId, process.countStats)
+            val update = services.storage.recordDeath(context.victimUuid, context.killerUuid, process.countStats)
             previousVictimStreak = update.previousVictimStreak
-            if (context.killer != null && process.countStats) {
-                val themeName = if (foliaMode) {
-                    "default"
-                } else {
-                    services.themes.firstAvailable(
-                        context.killer,
-                        services.storage.profile(context.killer.uniqueId, context.killer.name).selectedTheme
-                    ).displayName
-                }
+            if (killer != null && process.countStats) {
                 services.deathAnalyzer.fillPlaceholders(
                     context,
                     update.killerStreak,
@@ -77,6 +95,8 @@ class DeathListener(private val plugin: DreamKillEcho) : Listener {
         if (allowEffects && process.shouldEffect) {
             services.effects.play(context)
         }
-        services.storage.logKill(KillLog(context.killer?.uniqueId, context.victim.uniqueId, context.weapon, context.world, context.deathCause, context.distance))
+        if (allowStats) {
+            services.storage.logKill(KillLog(context.killerUuid, context.victimUuid, context.weapon, context.world, context.deathCause, context.distance))
+        }
     }
 }

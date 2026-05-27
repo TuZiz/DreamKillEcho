@@ -23,7 +23,11 @@ class DreamKillEcho : JavaPlugin() {
     var commandRouter: CommandRouter? = null
         private set
 
+    @Volatile
+    private var disabling: Boolean = false
+
     override fun onEnable() {
+        disabling = false
         schedulerAdapter = SchedulerAdapter.create(this)
         val executor = CommandRouter(this)
         commandRouter = executor
@@ -33,33 +37,53 @@ class DreamKillEcho : JavaPlugin() {
         schedulerAdapter.runAsync {
             try {
                 Resources.ensureDefaults(this, listOf("config.yml", "lang/zh_cn.yml", "lang/en_us.yml", "themes.yml", "storage.yml", "gui/theme-menu.yml"))
+                if (!isEnabled || disabling) return@runAsync
                 val configService = ConfigService.load(this)
                 val messageService = MessageService(this, configService.language, configService.fallbackLanguage)
                 val storage = StorageService(this, configService.storage)
                 storage.start()
+                if (!isEnabled || disabling) {
+                    messageService.close()
+                    storage.shutdown()
+                    return@runAsync
+                }
                 val built = PluginServices.create(this, schedulerAdapter, configService, messageService, storage)
+                if (!isEnabled || disabling) {
+                    built.shutdown()
+                    return@runAsync
+                }
                 schedulerAdapter.runMain {
+                    if (!isEnabled || disabling) {
+                        Thread({ built.shutdown() }, "DreamKillEcho-AbortStartup").apply { isDaemon = true }.start()
+                        return@runMain
+                    }
                     services = built
                     executor.bind(built)
                     server.pluginManager.registerEvents(DeathListener(this), this)
                     server.pluginManager.registerEvents(ThemeMenuListener(this), this)
-                    built.storage.prepareOnlinePlayers()
+                    built.storage.prepareOnlinePlayers(built.scheduler)
                     built.startTimers()
                     logger.info("[DreamKillEcho] Enabled on ${schedulerAdapter.platformName}.")
                 }
             } catch (ex: Exception) {
                 logger.severe("[DreamKillEcho] Startup failed: ${ex.message}")
                 ex.printStackTrace()
-                schedulerAdapter.runMain { server.pluginManager.disablePlugin(this) }
+                if (isEnabled && !disabling) {
+                    schedulerAdapter.runMain {
+                        if (isEnabled && !disabling) server.pluginManager.disablePlugin(this)
+                    }
+                }
             }
         }
     }
 
     override fun onDisable() {
+        disabling = true
         HandlerList.unregisterAll(this)
-        services?.shutdown()
+        val active = services
         services = null
         commandRouter?.bind(null)
+        active?.shutdown()
         if (::schedulerAdapter.isInitialized) {
             schedulerAdapter.cancelAll()
         }

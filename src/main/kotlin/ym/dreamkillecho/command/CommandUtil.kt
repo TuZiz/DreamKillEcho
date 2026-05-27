@@ -9,6 +9,9 @@ import ym.dreamkillecho.storage.PlayerProfile
 import java.util.UUID
 
 object CommandUtil {
+    const val FALLBACK_NO_PERMISSION = "DreamKillEcho: no permission."
+    const val FALLBACK_PLUGIN_NOT_READY = "DreamKillEcho is loading."
+
     fun deny(sender: CommandSender, services: PluginServices): Boolean {
         services.messages.send(sender, "no-permission")
         return true

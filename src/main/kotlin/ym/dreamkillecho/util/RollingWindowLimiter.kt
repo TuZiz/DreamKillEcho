@@ -35,4 +35,10 @@ class PerKeyCooldown(private val cooldownMillis: Long, private val clock: Clock 
         last[key] = now
         return true
     }
+
+    fun remainingMillis(key: String): Long {
+        if (cooldownMillis <= 0L) return 0L
+        val previous = last[key] ?: return 0L
+        return (cooldownMillis - (clock.millis() - previous)).coerceAtLeast(0L)
+    }
 }

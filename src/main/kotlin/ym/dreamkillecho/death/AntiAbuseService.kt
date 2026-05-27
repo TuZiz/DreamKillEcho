@@ -27,23 +27,23 @@ class AntiAbuseService(settings: PluginSettings) {
     ): KillProcessResult {
         val now = System.currentTimeMillis()
         cleanup(now)
-        val killer = context.killer
-        if (killer == null) {
+        val killerUuid = context.killerUuid
+        if (killerUuid == null) {
             return KillProcessResult(
                 countStats = false,
                 shouldBroadcast = trackBroadcast && broadcastLimiter.tryAcquire(),
-                shouldEffect = trackEffects && effectLimiter.tryAcquire(),
+                shouldEffect = false,
                 shutdownStreak = 0,
                 revenge = false
             )
         }
 
-        val pairKey = "${killer.uniqueId}:${context.victim.uniqueId}"
-        val reverseKey = "${context.victim.uniqueId}:${killer.uniqueId}"
+        val pairKey = "$killerUuid:${context.victimUuid}"
+        val reverseKey = "${context.victimUuid}:$killerUuid"
         val farmBlocked = trackStats && antiFarm.enabled && updateFarmState(pairKey, context, now)
         val spamAllowed = !trackBroadcast || (
-            killerCooldown.tryAcquire(killer.uniqueId.toString()) &&
-                victimCooldown.tryAcquire(context.victim.uniqueId.toString())
+            killerCooldown.tryAcquire(killerUuid.toString()) &&
+                victimCooldown.tryAcquire(context.victimUuid.toString())
             )
         val broadcast = trackBroadcast && spamAllowed && broadcastLimiter.tryAcquire()
         val effect = trackEffects && effectLimiter.tryAcquire()

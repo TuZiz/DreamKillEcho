@@ -23,9 +23,14 @@ class ReloadCommand : SubCommand {
                 if (loaded.storage.type != old.config.storage.type) {
                     context.plugin.logger.warning("[DreamKillEcho] storage.type changed in reload; active connection keeps old type until restart.")
                 }
+                if (!context.plugin.isEnabled) return@runAsync
                 val newMessages = MessageService(context.plugin, loaded.language, loaded.fallbackLanguage)
                 val rebuilt = ym.dreamkillecho.bootstrap.PluginServices.create(context.plugin, old.scheduler, loaded, newMessages, old.storage)
                 old.scheduler.runMain {
+                    if (!context.plugin.isEnabled) {
+                        newMessages.close()
+                        return@runMain
+                    }
                     old.messages.close()
                     context.plugin.replaceServices(rebuilt)
                     context.plugin.commandRouter?.bind(rebuilt)

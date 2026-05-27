@@ -31,10 +31,11 @@ class CustomCommand : SubCommand {
     }
 
     private fun set(player: org.bukkit.entity.Player, message: String, context: CommandContext) {
-        when (context.services.customMessages.set(player, message)) {
+        val setResult = context.services.customMessages.set(player, message)
+        when (setResult.result) {
             CustomMessageResult.SAVED -> context.services.messages.send(player, "custom-set-success")
             CustomMessageResult.PENDING -> context.services.messages.send(player, "custom-set-pending")
-            CustomMessageResult.COOLDOWN -> context.services.messages.send(player, "error-cooldown")
+            CustomMessageResult.COOLDOWN -> context.services.messages.send(player, "error-cooldown", mapOf("time" to setResult.cooldownSeconds.toString()))
             CustomMessageResult.TOO_LONG -> context.services.messages.send(player, "error-message-too-long", mapOf("max" to context.services.config.settings.custom.maxLength.toString()))
             CustomMessageResult.BLOCKED_WORD -> context.services.messages.send(player, "error-blocked-word")
             CustomMessageResult.INVALID_TAG -> context.services.messages.send(player, "error-invalid-tag")

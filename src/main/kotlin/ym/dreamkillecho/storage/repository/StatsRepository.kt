@@ -16,7 +16,7 @@ class StatsRepository {
     }
 
     fun save(connection: Connection, value: PlayerStats) {
-        connection.prepareStatement("REPLACE INTO stats(uuid,kills,deaths,current_streak,max_streak,last_victim_uuid,last_kill_time,updated_at) VALUES(?,?,?,?,?,?,?,?)").use { ps ->
+        connection.prepareStatement(upsertSql(connection)).use { ps ->
             ps.setString(1, value.uuid.toString())
             ps.setInt(2, value.kills)
             ps.setInt(3, value.deaths)
@@ -26,6 +26,36 @@ class StatsRepository {
             ps.setLong(7, value.lastKillTime)
             ps.setLong(8, value.updatedAt)
             ps.executeUpdate()
+        }
+    }
+
+    private fun upsertSql(connection: Connection): String {
+        return if (connection.metaData.databaseProductName.contains("mysql", ignoreCase = true)) {
+            """
+            INSERT INTO stats(uuid,kills,deaths,current_streak,max_streak,last_victim_uuid,last_kill_time,updated_at)
+            VALUES(?,?,?,?,?,?,?,?)
+            ON DUPLICATE KEY UPDATE
+              kills=VALUES(kills),
+              deaths=VALUES(deaths),
+              current_streak=VALUES(current_streak),
+              max_streak=VALUES(max_streak),
+              last_victim_uuid=VALUES(last_victim_uuid),
+              last_kill_time=VALUES(last_kill_time),
+              updated_at=VALUES(updated_at)
+            """.trimIndent()
+        } else {
+            """
+            INSERT INTO stats(uuid,kills,deaths,current_streak,max_streak,last_victim_uuid,last_kill_time,updated_at)
+            VALUES(?,?,?,?,?,?,?,?)
+            ON CONFLICT(uuid) DO UPDATE SET
+              kills=excluded.kills,
+              deaths=excluded.deaths,
+              current_streak=excluded.current_streak,
+              max_streak=excluded.max_streak,
+              last_victim_uuid=excluded.last_victim_uuid,
+              last_kill_time=excluded.last_kill_time,
+              updated_at=excluded.updated_at
+            """.trimIndent()
         }
     }
 

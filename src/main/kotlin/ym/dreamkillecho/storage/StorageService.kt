@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariDataSource
 import org.bukkit.Bukkit
 import org.bukkit.plugin.java.JavaPlugin
 import ym.dreamkillecho.config.StorageSettings
+import ym.dreamkillecho.scheduler.SchedulerAdapter
 import ym.dreamkillecho.storage.datasource.DataSourceFactory
 import ym.dreamkillecho.storage.migration.SchemaMigrator
 import ym.dreamkillecho.storage.repository.KillLogRepository
@@ -42,9 +43,11 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
         }
     }
 
-    fun prepareOnlinePlayers() {
+    fun prepareOnlinePlayers(scheduler: SchedulerAdapter) {
         for (player in Bukkit.getOnlinePlayers()) {
-            preparePlayerAsync(player.uniqueId, player.name)
+            scheduler.runEntity(player) {
+                preparePlayerAsync(player.uniqueId, player.name)
+            }
         }
     }
 
@@ -317,16 +320,19 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     private fun ensureDataSource(): Boolean {
         val existing = dataSource
         if (existing != null && !existing.isClosed) return true
+        var created: HikariDataSource? = null
         return try {
-            val created = DataSourceFactory.create(plugin, settings)
+            created = DataSourceFactory.create(plugin, settings)
             created.connection.use { connection ->
                 SchemaMigrator.initialize(connection, settings.type)
             }
             dataSource = created
+            created = null
             degraded = false
             plugin.logger.info("[DreamKillEcho] Storage connected with ${settings.type}.")
             true
         } catch (ex: Exception) {
+            runCatching { created?.close() }
             degraded = true
             plugin.logger.warning("[DreamKillEcho] Storage unavailable, degraded mode active: ${ex.message}")
             false

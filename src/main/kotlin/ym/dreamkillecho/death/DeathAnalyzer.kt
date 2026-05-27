@@ -27,8 +27,10 @@ class DeathAnalyzer(
         return DeathContext(
             victim = victim,
             killer = killer,
+            victimUuid = victim.uniqueId,
+            killerUuid = killer?.uniqueId,
             victimName = victim.name,
-            killerName = killer?.name,
+            killerName = if (foliaMode) null else killer?.name,
             mobName = mobName,
             weapon = weapon.fallbackText,
             world = victim.world.name,
@@ -38,9 +40,22 @@ class DeathAnalyzer(
             victimHealth = victim.health,
             killerHealth = if (!foliaMode) killer?.health else null,
             killerIp = if (!foliaMode) killer?.address?.address?.hostAddress else null,
-            victimIp = victim.address?.address?.hostAddress,
+            victimIp = if (!foliaMode) victim.address?.address?.hostAddress else null,
+            victimLocation = victim.location.clone(),
             componentPlaceholders = linkedMapOf("weapon" to weapon.component)
         )
+    }
+
+    fun enrichKillerSnapshot(context: DeathContext, killer: Player) {
+        context.killerName = killer.name
+        val weapon = weaponNames.heldItemName(killer.inventory.itemInMainHand)
+        context.weapon = weapon.fallbackText
+        context.componentPlaceholders["weapon"] = weapon.component
+        context.killerHealth = killer.health
+        val victimLocation = context.victimLocation
+        if (victimLocation != null && killer.world.name == context.world) {
+            context.distance = killer.location.distance(victimLocation)
+        }
     }
 
     private fun findKiller(victim: Player, damage: EntityDamageEvent?): Player? {

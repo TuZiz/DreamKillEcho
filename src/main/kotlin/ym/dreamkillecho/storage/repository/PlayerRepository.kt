@@ -35,7 +35,7 @@ class PlayerRepository {
     }
 
     fun save(connection: Connection, profile: PlayerProfile) {
-        connection.prepareStatement("REPLACE INTO players(uuid,name,name_lower,selected_theme,custom_message,custom_message_status,custom_message_updated_at,receive_broadcast,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?)").use { ps ->
+        connection.prepareStatement(upsertSql(connection)).use { ps ->
             ps.setString(1, profile.uuid.toString())
             ps.setString(2, profile.name)
             ps.setString(3, profile.name.lowercase())
@@ -47,6 +47,40 @@ class PlayerRepository {
             ps.setLong(9, profile.createdAt)
             ps.setLong(10, profile.updatedAt)
             ps.executeUpdate()
+        }
+    }
+
+    private fun upsertSql(connection: Connection): String {
+        return if (connection.metaData.databaseProductName.contains("mysql", ignoreCase = true)) {
+            """
+            INSERT INTO players(uuid,name,name_lower,selected_theme,custom_message,custom_message_status,custom_message_updated_at,receive_broadcast,created_at,updated_at)
+            VALUES(?,?,?,?,?,?,?,?,?,?)
+            ON DUPLICATE KEY UPDATE
+              name=VALUES(name),
+              name_lower=VALUES(name_lower),
+              selected_theme=VALUES(selected_theme),
+              custom_message=VALUES(custom_message),
+              custom_message_status=VALUES(custom_message_status),
+              custom_message_updated_at=VALUES(custom_message_updated_at),
+              receive_broadcast=VALUES(receive_broadcast),
+              created_at=VALUES(created_at),
+              updated_at=VALUES(updated_at)
+            """.trimIndent()
+        } else {
+            """
+            INSERT INTO players(uuid,name,name_lower,selected_theme,custom_message,custom_message_status,custom_message_updated_at,receive_broadcast,created_at,updated_at)
+            VALUES(?,?,?,?,?,?,?,?,?,?)
+            ON CONFLICT(uuid) DO UPDATE SET
+              name=excluded.name,
+              name_lower=excluded.name_lower,
+              selected_theme=excluded.selected_theme,
+              custom_message=excluded.custom_message,
+              custom_message_status=excluded.custom_message_status,
+              custom_message_updated_at=excluded.custom_message_updated_at,
+              receive_broadcast=excluded.receive_broadcast,
+              created_at=excluded.created_at,
+              updated_at=excluded.updated_at
+            """.trimIndent()
         }
     }
 

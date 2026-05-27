@@ -1,8 +1,8 @@
 # =========================================================
-# 击杀播报主题仓库 GUI
-# 写法参考 UpTags: Title + GuiPlain + GuiKey + templates。
+# DreamKillEcho 击杀播报主题仓库 GUI
+# 写法：Title + GuiPlain + GuiKey + templates
 # @ 是自动分页内容位，会按 themes.yml 的主题列表自动填充。
-# 新增击杀播报主题时，只需要修改 themes.yml 与权限，不需要同步修改本文件。
+# 新增主题时只需要修改 themes.yml 与权限，不需要同步修改本文件槽位。
 # =========================================================
 
 Title: "&#38BDF8&l✦ &#7DD3FC&l击杀播报主题 &#94A3B8| &#E2E8F0进度: &#A7F3D0%unlocked%&#94A3B8/&#E2E8F0%total%"
@@ -24,46 +24,46 @@ GuiKey:
     Name: "&f"
 
   "X":
-    Material: "CYAN_STAINED_GLASS_PANE" # 四角换成青色玻璃板，呼应标题色调
+    Material: "CYAN_STAINED_GLASS_PANE"
     Name: "&f"
 
   "B":
     IconFunction: "back"
     Material: "BARRIER"
-    Name: "&#F87171&l[✖] &c关闭仓库"
+    Name: "&#F87171&l[✕] &c关闭仓库"
     Lore:
       - ""
       - "&#94A3B8▪ &#E2E8F0当前使用: &#FDE047%current_theme%"
       - ""
-      - "&#F87171 ➦ 点击即可关闭菜单"
+      - "&#F87171➜ 点击关闭菜单"
 
   "L":
     IconFunction: "last"
     has:
       Material: "ARROW"
-      Name: "&#FDE047&l[◂] &e上一页"
+      Name: "&#FDE047&l[◀] &e上一页"
       Lore:
         - ""
-        - "&#94A3B8▪ &#E2E8F0当前进度: &#38BDF8%page% &#94A3B8/ &#38BDF8%pages%"
+        - "&#94A3B8▪ &#E2E8F0当前页: &#38BDF8%page% &#94A3B8/ &#38BDF8%pages%"
         - ""
-        - "&#FDE047 ➦ 点击返回上一页"
+        - "&#FDE047➜ 点击返回上一页"
     normal:
       Material: "GRAY_STAINED_GLASS_PANE"
-      Name: "&#94A3B8&l[◂] &7已经是第一页"
+      Name: "&#94A3B8&l[◀] &7已经是第一页"
 
   "N":
     IconFunction: "next"
     has:
       Material: "ARROW"
-      Name: "&#FDE047&l[▸] &e下一页"
+      Name: "&#FDE047&l[▶] &e下一页"
       Lore:
         - ""
-        - "&#94A3B8▪ &#E2E8F0当前进度: &#38BDF8%page% &#94A3B8/ &#38BDF8%pages%"
+        - "&#94A3B8▪ &#E2E8F0当前页: &#38BDF8%page% &#94A3B8/ &#38BDF8%pages%"
         - ""
-        - "&#FDE047 ➦ 点击前往下一页"
+        - "&#FDE047➜ 点击前往下一页"
     normal:
       Material: "GRAY_STAINED_GLASS_PANE"
-      Name: "&#94A3B8&l[▸] &7已经是最后一页"
+      Name: "&#94A3B8&l[▶] &7已经是最后一页"
 
 CloseOnSelect: true
 
@@ -74,7 +74,7 @@ Status:
 
 templates:
   theme-available:
-    material: "NAME_TAG" # 推荐换成 NAME_TAG (命名牌) 或 PAPER (纸)，比染料更有高级感
+    material: "NAME_TAG"
     name: "&#A7F3D0&l%theme_display%"
     lore:
       - "&#475569&m                               "
@@ -82,8 +82,11 @@ templates:
       - "&#94A3B8▪ &#E2E8F0解锁权限: &#A7F3D0%theme_permission%"
       - "&#94A3B8▪ &#E2E8F0优先等级: &#FDE047%theme_priority%"
       - "&#94A3B8▪ &#E2E8F0当前状态: %theme_status%"
+      - ""
+      - "&#38BDF8播报示例:"
+      - "%theme_preview%"
       - "&#475569&m                               "
-      - "&#A7F3D0 ➦ 左键点击即可装备此主题"
+      - "&#A7F3D0➜ 左键点击装备此主题"
 
   theme-selected:
     material: "NETHER_STAR"
@@ -94,12 +97,15 @@ templates:
       - "&#94A3B8▪ &#E2E8F0解锁权限: &#FDE047%theme_permission%"
       - "&#94A3B8▪ &#E2E8F0优先等级: &#FDE047%theme_priority%"
       - "&#94A3B8▪ &#E2E8F0当前状态: %theme_status%"
+      - ""
+      - "&#38BDF8播报示例:"
+      - "%theme_preview%"
       - "&#475569&m                               "
-      - "&#FDE047 ★ 你正在使用这个击杀播报主题"
+      - "&#FDE047★ 你正在使用这个击杀播报主题"
     glow: true
 
   theme-locked:
-    material: "GRAY_DYE" # 也可考虑换成 MINECART (矿车) 或 IRON_BARS (铁栏杆) 强调锁定感
+    material: "GRAY_DYE"
     name: "&#94A3B8&l%theme_display%"
     lore:
       - "&#475569&m                               "
@@ -107,5 +113,8 @@ templates:
       - "&#94A3B8▪ &#E2E8F0所需权限: &#F87171%theme_permission%"
       - "&#94A3B8▪ &#E2E8F0优先等级: &#71717A%theme_priority%"
       - "&#94A3B8▪ &#E2E8F0当前状态: %theme_status%"
+      - ""
+      - "&#38BDF8播报示例:"
+      - "%theme_preview%"
       - "&#475569&m                               "
-      - "&#F87171 ✖ 你暂时还没有权限使用这个主题"
+      - "&#F87171✕ 你暂时还没有权限使用这个主题"
