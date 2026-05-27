@@ -12,7 +12,7 @@ object DataSourceFactory {
         when (settings.type) {
             "mysql" -> {
                 Class.forName("com.mysql.cj.jdbc.Driver")
-                config.jdbcUrl = "jdbc:mysql://${settings.mysql.host}:${settings.mysql.port}/${settings.mysql.database}?useSSL=false&characterEncoding=utf8&serverTimezone=UTC"
+                config.jdbcUrl = "jdbc:mysql://${settings.mysql.host}:${settings.mysql.port}/${settings.mysql.database}?useSSL=false&characterEncoding=utf8mb4&serverTimezone=UTC"
                 config.username = settings.mysql.username
                 config.password = settings.mysql.password
                 config.maximumPoolSize = settings.mysql.maximumPoolSize

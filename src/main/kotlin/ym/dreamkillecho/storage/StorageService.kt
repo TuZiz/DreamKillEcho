@@ -16,6 +16,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.TimeUnit
 
 class StorageService(private val plugin: JavaPlugin, private val settings: StorageSettings) {
@@ -32,6 +33,8 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     private val statsRepository = StatsRepository()
     private val killLogRepository = KillLogRepository()
     private var dataSource: HikariDataSource? = null
+    @Volatile
+    private var shuttingDown: Boolean = false
 
     @Volatile
     var degraded: Boolean = false
@@ -52,6 +55,9 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     fun preparePlayerAsync(uuid: UUID, name: String): CompletableFuture<PlayerProfile> {
+        if (shuttingDown || executor.isShutdown) {
+            return CompletableFuture.completedFuture(profile(uuid, name))
+        }
         return CompletableFuture.supplyAsync({
             openConnectionOrNull()?.use { connection ->
                 val loadedProfile = loadOrCreateProfile(connection, uuid, name)
@@ -101,6 +107,9 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     fun statsAsync(uuid: UUID): CompletableFuture<PlayerStats> {
+        if (shuttingDown || executor.isShutdown) {
+            return CompletableFuture.completedFuture(stats(uuid))
+        }
         synchronized(statsLock) {
             stats[uuid]?.let { return CompletableFuture.completedFuture(it.copy()) }
         }
@@ -123,6 +132,9 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     fun findProfileAsync(nameOrUuid: String): CompletableFuture<PlayerProfile?> {
+        if (shuttingDown || executor.isShutdown) {
+            return CompletableFuture.completedFuture(null)
+        }
         uuidFromStringOrNull(nameOrUuid)?.let { uuid ->
             synchronized(profileLock) {
                 profiles[uuid]?.copy()?.let { return CompletableFuture.completedFuture(it) }
@@ -154,6 +166,13 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     fun pendingCustomMessagesAsync(): CompletableFuture<List<PlayerProfile>> {
+        if (shuttingDown || executor.isShutdown) {
+            return CompletableFuture.completedFuture(
+                cachedProfiles()
+                    .filter { it.customMessageStatus == CustomMessageStatus.PENDING }
+                    .sortedByDescending { it.customMessageUpdatedAt }
+            )
+        }
         return CompletableFuture.supplyAsync({
             openConnectionOrNull()?.use { connection ->
                 playerRepository.pendingCustomMessages(connection).forEach { mergeProfile(it.uuid, it) }
@@ -173,6 +192,9 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
         return synchronized(statsLock) {
             val victimStats = stats.computeIfAbsent(victimUuid) { PlayerStats(victimUuid) }
             val previousVictimStreak = victimStats.currentStreak
+            if (!countStats) {
+                return@synchronized StatsUpdateResult(previousVictimStreak, 0, 0, victimStats.maxStreak)
+            }
             victimStats.deaths += 1
             victimStats.currentStreak = 0
             victimStats.updatedAt = System.currentTimeMillis()
@@ -197,6 +219,7 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     fun logKill(log: KillLog) {
+        if (shuttingDown || executor.isShutdown) return
         CompletableFuture.runAsync({
             runCatching {
                 openConnectionOrNull()?.use { connection ->
@@ -207,48 +230,69 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     fun flushAsync(): CompletableFuture<Void> {
-        return CompletableFuture.runAsync({
-            val profileCopies = synchronized(profileLock) {
-                dirtyProfiles.toList().mapNotNull { uuid -> profiles[uuid]?.copy() }
+        return flushAsyncInternal(force = false)
+    }
+
+    private fun flushAsyncInternal(force: Boolean): CompletableFuture<Void> {
+        if (!force && (shuttingDown || executor.isShutdown)) {
+            return CompletableFuture.completedFuture(null)
+        }
+        val future = try {
+            CompletableFuture.runAsync({ flushDirty() }, executor)
+        } catch (ex: RejectedExecutionException) {
+            if (!force) {
+                plugin.logger.warning("[DreamKillEcho] Flush skipped because storage executor is shutting down.")
+                return CompletableFuture.completedFuture(null)
             }
-            val statCopies = synchronized(statsLock) {
-                dirtyStats.toList().mapNotNull { uuid -> stats[uuid]?.copy() }
-            }
-            if (profileCopies.isEmpty() && statCopies.isEmpty()) return@runAsync
-            val connection = openConnectionOrNull() ?: return@runAsync
-            connection.use {
-                it.autoCommit = false
-                try {
-                    for (copy in profileCopies) playerRepository.save(it, copy)
-                    for (copy in statCopies) statsRepository.save(it, copy)
-                    it.commit()
-                    synchronized(profileLock) {
-                        for (copy in profileCopies) {
-                            val current = profiles[copy.uuid]
-                            if (current != null && current.updatedAt == copy.updatedAt) dirtyProfiles -= copy.uuid
-                        }
-                    }
-                    synchronized(statsLock) {
-                        for (copy in statCopies) {
-                            val current = stats[copy.uuid]
-                            if (current != null && current.updatedAt == copy.updatedAt) dirtyStats -= copy.uuid
-                        }
-                    }
-                } catch (ex: Exception) {
-                    it.rollback()
-                    throw ex
-                } finally {
-                    it.autoCommit = true
-                }
-            }
-        }, executor).exceptionally { throwable ->
+            throw ex
+        }
+        return future.exceptionally { throwable ->
             degraded = true
             plugin.logger.warning("[DreamKillEcho] Flush failed, dirty data kept for retry: ${throwable.message}")
             null
         }
     }
 
+    private fun flushDirty() {
+        val profileCopies = synchronized(profileLock) {
+            dirtyProfiles.toList().mapNotNull { uuid -> profiles[uuid]?.copy() }
+        }
+        val statCopies = synchronized(statsLock) {
+            dirtyStats.toList().mapNotNull { uuid -> stats[uuid]?.copy() }
+        }
+        if (profileCopies.isEmpty() && statCopies.isEmpty()) return
+        val connection = openConnectionOrNull() ?: return
+        connection.use {
+            it.autoCommit = false
+            try {
+                for (copy in profileCopies) playerRepository.save(it, copy)
+                for (copy in statCopies) statsRepository.save(it, copy)
+                it.commit()
+                synchronized(profileLock) {
+                    for (copy in profileCopies) {
+                        val current = profiles[copy.uuid]
+                        if (current != null && current.updatedAt == copy.updatedAt) dirtyProfiles -= copy.uuid
+                    }
+                }
+                synchronized(statsLock) {
+                    for (copy in statCopies) {
+                        val current = stats[copy.uuid]
+                        if (current != null && current.updatedAt == copy.updatedAt) dirtyStats -= copy.uuid
+                    }
+                }
+            } catch (ex: Exception) {
+                it.rollback()
+                throw ex
+            } finally {
+                it.autoCommit = true
+            }
+        }
+    }
+
     fun topStats(type: String, limit: Int): CompletableFuture<List<LeaderboardRow>> {
+        if (shuttingDown || executor.isShutdown) {
+            return CompletableFuture.completedFuture(emptyList())
+        }
         return CompletableFuture.supplyAsync({
             val column = if (type.equals("streak", true)) "max_streak" else "kills"
             openConnectionOrNull()?.use { connection ->
@@ -279,10 +323,22 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     fun shutdown() {
-        runCatching { flushAsync().get(5, TimeUnit.SECONDS) }
+        if (shuttingDown) return
+        shuttingDown = true
+        plugin.logger.info("[DreamKillEcho] Saving storage data before shutdown (up to 5s)...")
+        val flushFuture = try {
+            flushAsyncInternal(force = true)
+        } catch (ex: Exception) {
+            plugin.logger.warning("[DreamKillEcho] Failed to submit final storage flush: ${ex.message}")
+            null
+        }
+        runCatching { flushFuture?.get(5, TimeUnit.SECONDS) }
             .onFailure { plugin.logger.warning("[DreamKillEcho] Timed out while flushing storage on shutdown: ${it.message}") }
         dataSource?.close()
         executor.shutdown()
+        if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+            executor.shutdownNow()
+        }
     }
 
     fun cachedProfiles(): Collection<PlayerProfile> {

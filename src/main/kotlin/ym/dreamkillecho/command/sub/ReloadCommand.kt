@@ -27,14 +27,23 @@ class ReloadCommand : SubCommand {
                 val newMessages = MessageService(context.plugin, loaded.language, loaded.fallbackLanguage)
                 val rebuilt = ym.dreamkillecho.bootstrap.PluginServices.create(context.plugin, old.scheduler, loaded, newMessages, old.storage)
                 old.scheduler.runMain {
-                    if (!context.plugin.isEnabled) {
-                        newMessages.close()
-                        return@runMain
+                    try {
+                        if (!context.plugin.isEnabled) {
+                            rebuilt.shutdown(closeStorage = false)
+                            return@runMain
+                        }
+                        rebuilt.startTimers()
+                        context.plugin.replaceServices(rebuilt)
+                        context.plugin.commandRouter?.bind(rebuilt)
+                        sendSafely(sender, rebuilt, "reload-success")
+                        runCatching { old.shutdown(closeStorage = false) }
+                            .onFailure { context.plugin.logger.warning("[DreamKillEcho] Failed to close previous reload services: ${it.message}") }
+                    } catch (ex: Exception) {
+                        rebuilt.shutdown(closeStorage = false)
+                        sendSafely(sender, old, "reload-failed", mapOf("reason" to (ex.message ?: "unknown")))
+                        context.plugin.logger.severe("[DreamKillEcho] Reload failed: ${ex.message}")
+                        ex.printStackTrace()
                     }
-                    old.messages.close()
-                    context.plugin.replaceServices(rebuilt)
-                    context.plugin.commandRouter?.bind(rebuilt)
-                    sendSafely(sender, rebuilt, "reload-success")
                 }
             } catch (ex: Exception) {
                 old.scheduler.runMain {

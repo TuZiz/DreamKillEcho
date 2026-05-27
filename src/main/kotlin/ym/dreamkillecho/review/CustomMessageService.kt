@@ -86,7 +86,7 @@ class CustomMessageService(
     private fun containsDeniedTag(message: String): Boolean {
         val regex = Regex("<\\s*/?\\s*([a-zA-Z0-9_-]+)")
         return regex.findAll(message).any { match ->
-            match.groupValues.getOrNull(1)?.lowercase() in settings.deniedTags
+            match.groupValues.getOrNull(1)?.lowercase() in effectiveDeniedTags
         }
     }
 
@@ -124,6 +124,9 @@ class CustomMessageService(
     }
 
     private companion object {
+        private val alwaysDeniedTags = setOf(
+            "click", "hover", "insertion", "selector", "score", "nbt", "keybind", "translatable", "font", "transition"
+        )
         private val allowedColorTags = setOf(
             "black", "dark_blue", "dark_green", "dark_aqua", "dark_red", "dark_purple", "gold",
             "gray", "dark_gray", "blue", "green", "aqua", "red", "light_purple", "yellow",
@@ -131,4 +134,6 @@ class CustomMessageService(
         )
         private val hexColor = Regex("#[0-9a-f]{6}")
     }
+
+    private val effectiveDeniedTags = settings.deniedTags + alwaysDeniedTags
 }

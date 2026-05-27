@@ -156,6 +156,8 @@ mysql:
 
 数据库不可用时插件进入降级模式，只使用内存缓存运行，控制台会输出警告。后续玩家加载、查询和定时 flush 会继续尝试重连；dirty profile / stats 不会因为一次 flush 失败被清除，数据库恢复后会尽量写回。
 
+MySQL 连接 URL 默认使用 `characterEncoding=utf8mb4`，用于正常保存中文和 emoji 文本。
+
 启动时会执行幂等 schema migration。当前迁移会保留已有表结构，补充 `players.name_lower` 并填充历史数据，同时创建 `players.name_lower`、自定义消息审核、`stats.kills`、`stats.max_streak`、`kill_logs.created_at`、`kill_logs.killer_uuid`、`kill_logs.victim_uuid` 等索引，SQLite 与 MySQL 均按同一版本序列执行。
 
 ## 测试建议
@@ -182,7 +184,7 @@ mysql:
 ## Production hardening notes
 
 - Custom kill message permissions are layered: `dreamkillecho.custom.message` only allows setting a message; `dreamkillecho.custom.color` allows color, hex color, `gradient`, and `rainbow` tags; `dreamkillecho.custom.minimessage` allows the configured MiniMessage safe subset.
-- Player custom messages still reject `click`, `hover`, `insertion`, `selector`, `score`, `nbt`, `keybind`, and `translatable` tags even with `dreamkillecho.custom.minimessage`. Without `custom.minimessage`, player input is stored as escaped plain text and is not parsed as MiniMessage formatting.
+- Player custom messages still reject `click`, `hover`, `insertion`, `selector`, `score`, `nbt`, `keybind`, `translatable`, `font`, and `transition` tags even with `dreamkillecho.custom.minimessage`. Without `custom.minimessage`, player input is stored as escaped plain text and is not parsed as MiniMessage formatting.
 - On Folia, player-kill handling switches to the killer entity scheduler before reading killer name, weapon, health, location, theme, permissions, custom message, or effect state. `anti-farm.same-ip-no-stats` remains degraded on Folia because cross-region player IP reads are not reliable.
 - Kill log writes follow `worlds.blocked-world-stats`; worlds where stats are disabled do not write kill log rows.
 

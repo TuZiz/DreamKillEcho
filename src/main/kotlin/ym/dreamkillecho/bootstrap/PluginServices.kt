@@ -12,6 +12,7 @@ import ym.dreamkillecho.message.MessageService
 import ym.dreamkillecho.review.CustomMessageService
 import ym.dreamkillecho.scheduler.SchedulerAdapter
 import ym.dreamkillecho.storage.StorageService
+import ym.dreamkillecho.scheduler.SchedulerTask
 import ym.dreamkillecho.theme.ThemeService
 
 class PluginServices(
@@ -28,14 +29,25 @@ class PluginServices(
     val effects: EffectService,
     val customMessages: CustomMessageService
 ) {
+    private var flushTimer: SchedulerTask? = null
+
+    @Synchronized
     fun startTimers() {
+        stopTimers()
         val period = config.settings.flushIntervalSeconds.coerceAtLeast(30L) * 20L
-        scheduler.runTimer(period, period) { storage.flushAsync() }
+        flushTimer = scheduler.runTimer(period, period) { storage.flushAsync() }
     }
 
-    fun shutdown() {
+    @Synchronized
+    fun stopTimers() {
+        flushTimer?.cancel()
+        flushTimer = null
+    }
+
+    fun shutdown(closeStorage: Boolean = true) {
+        stopTimers()
         messages.close()
-        storage.shutdown()
+        if (closeStorage) storage.shutdown()
     }
 
     companion object {

@@ -18,7 +18,7 @@ interface SchedulerAdapter {
     fun runMain(task: () -> Unit)
     fun runAsync(task: () -> Unit)
     fun runLater(delayTicks: Long, task: () -> Unit)
-    fun runTimer(delayTicks: Long, periodTicks: Long, task: () -> Unit)
+    fun runTimer(delayTicks: Long, periodTicks: Long, task: () -> Unit): SchedulerTask
     fun runEntity(entity: Entity, task: () -> Unit)
     fun runLocation(location: Location, task: () -> Unit)
     fun cancelAll()
@@ -34,26 +34,29 @@ interface SchedulerAdapter {
     }
 }
 
+interface SchedulerTask {
+    fun cancel()
+}
+
 private class BukkitSchedulerAdapter(private val plugin: Plugin) : SchedulerAdapter {
-    private val tasks = Collections.synchronizedList(mutableListOf<Int>())
+    private val periodicTasks = Collections.synchronizedList(mutableListOf<SchedulerTask>())
     override val platformName: String = "BukkitScheduler"
 
     override fun runMain(task: () -> Unit) {
-        if (Bukkit.isPrimaryThread()) task() else {
-            tasks += Bukkit.getScheduler().runTask(plugin, Runnable { task.safeRun(plugin) }).taskId
-        }
+        if (Bukkit.isPrimaryThread()) task() else Bukkit.getScheduler().runTask(plugin, Runnable { task.safeRun(plugin) })
     }
 
     override fun runAsync(task: () -> Unit) {
-        tasks += Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable { task.safeRun(plugin) }).taskId
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable { task.safeRun(plugin) })
     }
 
     override fun runLater(delayTicks: Long, task: () -> Unit) {
-        tasks += Bukkit.getScheduler().runTaskLater(plugin, Runnable { task.safeRun(plugin) }, delayTicks).taskId
+        Bukkit.getScheduler().runTaskLater(plugin, Runnable { task.safeRun(plugin) }, delayTicks)
     }
 
-    override fun runTimer(delayTicks: Long, periodTicks: Long, task: () -> Unit) {
-        tasks += Bukkit.getScheduler().runTaskTimer(plugin, Runnable { task.safeRun(plugin) }, delayTicks, periodTicks).taskId
+    override fun runTimer(delayTicks: Long, periodTicks: Long, task: () -> Unit): SchedulerTask {
+        val bukkitTask = Bukkit.getScheduler().runTaskTimer(plugin, Runnable { task.safeRun(plugin) }, delayTicks, periodTicks)
+        return BukkitTaskHandle { bukkitTask.cancel() }.also { periodicTasks += it }
     }
 
     override fun runEntity(entity: Entity, task: () -> Unit) = runMain(task)
@@ -61,14 +64,16 @@ private class BukkitSchedulerAdapter(private val plugin: Plugin) : SchedulerAdap
     override fun runLocation(location: Location, task: () -> Unit) = runMain(task)
 
     override fun cancelAll() {
+        val copy = periodicTasks.toList()
+        periodicTasks.clear()
+        copy.forEach { it.cancel() }
         Bukkit.getScheduler().cancelTasks(plugin)
-        tasks.clear()
     }
 }
 
 private class FoliaReflectiveSchedulerAdapter(private val plugin: Plugin) : SchedulerAdapter {
     override val platformName: String = "FoliaReflectiveScheduler"
-    private val scheduledTasks = Collections.synchronizedList(mutableListOf<Any>())
+    private val periodicTasks = Collections.synchronizedList(mutableListOf<SchedulerTask>())
 
     override fun runMain(task: () -> Unit) {
         invokeGlobal("run", task)
@@ -79,15 +84,14 @@ private class FoliaReflectiveSchedulerAdapter(private val plugin: Plugin) : Sche
         val method = scheduler.javaClass.methods.first { method ->
             method.name == "runNow" && method.parameterTypes.size == 2
         }
-        val scheduled = method.invoke(scheduler, plugin, Consumer<Any> { task.safeRun(plugin) })
-        if (scheduled != null) scheduledTasks += scheduled
+        method.invoke(scheduler, plugin, Consumer<Any> { task.safeRun(plugin) })
     }
 
     override fun runLater(delayTicks: Long, task: () -> Unit) {
         invokeGlobal("runDelayed", task, delayTicks)
     }
 
-    override fun runTimer(delayTicks: Long, periodTicks: Long, task: () -> Unit) {
+    override fun runTimer(delayTicks: Long, periodTicks: Long, task: () -> Unit): SchedulerTask {
         val scheduler = Bukkit::class.java.getMethod("getAsyncScheduler").invoke(null)
         val method = scheduler.javaClass.methods.first { method ->
             method.name == "runAtFixedRate" && method.parameterTypes.size == 5
@@ -100,7 +104,7 @@ private class FoliaReflectiveSchedulerAdapter(private val plugin: Plugin) : Sche
             ticksToMillis(periodTicks),
             TimeUnit.MILLISECONDS
         )
-        if (scheduled != null) scheduledTasks += scheduled
+        return ReflectiveTaskHandle(scheduled).also { periodicTasks += it }
     }
 
     override fun runEntity(entity: Entity, task: () -> Unit) {
@@ -108,8 +112,7 @@ private class FoliaReflectiveSchedulerAdapter(private val plugin: Plugin) : Sche
         val run = entityScheduler.javaClass.methods.first { method ->
             method.name == "run" && method.parameterTypes.size == 3
         }
-        val scheduled = run.invoke(entityScheduler, plugin, Consumer<Any> { task.safeRun(plugin) }, Runnable {})
-        if (scheduled != null) scheduledTasks += scheduled
+        run.invoke(entityScheduler, plugin, Consumer<Any> { task.safeRun(plugin) }, Runnable {})
     }
 
     override fun runLocation(location: Location, task: () -> Unit) {
@@ -117,7 +120,7 @@ private class FoliaReflectiveSchedulerAdapter(private val plugin: Plugin) : Sche
         val method = scheduler.javaClass.methods.first { method ->
             method.name == "run" && method.parameterTypes.size == 5
         }
-        val scheduled = method.invoke(
+        method.invoke(
             scheduler,
             plugin,
             location.world,
@@ -125,15 +128,12 @@ private class FoliaReflectiveSchedulerAdapter(private val plugin: Plugin) : Sche
             location.blockZ shr 4,
             Consumer<Any> { task.safeRun(plugin) }
         )
-        if (scheduled != null) scheduledTasks += scheduled
     }
 
     override fun cancelAll() {
-        val copy = scheduledTasks.toList()
-        scheduledTasks.clear()
-        for (scheduled in copy) {
-            runCatching { scheduled.javaClass.methods.firstOrNull { it.name == "cancel" && it.parameterCount == 0 }?.invoke(scheduled) }
-        }
+        val copy = periodicTasks.toList()
+        periodicTasks.clear()
+        copy.forEach { it.cancel() }
     }
 
     private fun invokeGlobal(methodName: String, task: () -> Unit, delayTicks: Long? = null) {
@@ -144,12 +144,11 @@ private class FoliaReflectiveSchedulerAdapter(private val plugin: Plugin) : Sche
         } else {
             candidates.first { it.parameterTypes.size == 3 }
         }
-        val scheduled = if (delayTicks == null) {
+        if (delayTicks == null) {
             method.invoke(scheduler, plugin, Consumer<Any> { task.safeRun(plugin) })
         } else {
             method.invoke(scheduler, plugin, Consumer<Any> { task.safeRun(plugin) }, delayTicks)
         }
-        if (scheduled != null) scheduledTasks += scheduled
     }
 
     private fun ticksToMillis(ticks: Long): Long = (ticks.coerceAtLeast(1L) * 50L)
@@ -163,6 +162,19 @@ private class FoliaReflectiveSchedulerAdapter(private val plugin: Plugin) : Sche
                 true
             }.getOrDefault(false)
         }
+    }
+}
+
+private class BukkitTaskHandle(private val cancelAction: () -> Unit) : SchedulerTask {
+    override fun cancel() {
+        runCatching { cancelAction() }
+    }
+}
+
+private class ReflectiveTaskHandle(private val scheduled: Any?) : SchedulerTask {
+    override fun cancel() {
+        val task = scheduled ?: return
+        runCatching { task.javaClass.methods.firstOrNull { it.name == "cancel" && it.parameterCount == 0 }?.invoke(task) }
     }
 }
 

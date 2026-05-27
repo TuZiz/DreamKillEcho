@@ -92,6 +92,8 @@ custom-message:
     - nbt
     - keybind
     - translatable
+    - font
+    - transition
 
 # 连杀播报配置。只播报展示，不发放奖励。
 streaks:
