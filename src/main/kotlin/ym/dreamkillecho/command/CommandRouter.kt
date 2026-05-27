@@ -9,8 +9,10 @@ import ym.dreamkillecho.bootstrap.PluginServices
 import ym.dreamkillecho.command.sub.CustomCommand
 import ym.dreamkillecho.command.sub.GuiCommand
 import ym.dreamkillecho.command.sub.HelpCommand
+import ym.dreamkillecho.command.sub.PreviewCommand
 import ym.dreamkillecho.command.sub.ReloadCommand
 import ym.dreamkillecho.command.sub.ReviewCommand
+import ym.dreamkillecho.command.sub.SetCommand
 import ym.dreamkillecho.command.sub.StatsCommand
 import ym.dreamkillecho.command.sub.ThemeCommand
 import ym.dreamkillecho.command.sub.ToggleCommand
@@ -24,6 +26,8 @@ class CommandRouter(private val plugin: DreamKillEcho) : CommandExecutor, TabCom
         ReloadCommand(),
         ToggleCommand(),
         GuiCommand(),
+        SetCommand(),
+        PreviewCommand(),
         ThemeCommand(),
         CustomCommand(),
         ReviewCommand(),

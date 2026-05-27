@@ -13,7 +13,7 @@ DreamKillEcho 是一个 Kotlin + Maven 编写的 Minecraft 击杀播报 / 死亡
 - 防刷屏 / 防刷击杀：同击杀者、同受害者、每分钟广播与特效限流、同受害者反复击杀限制，并对反刷记录做 TTL 清理。
 - 世界限制：blacklist / whitelist，可分别控制播报、统计、特效。
 - 玩家开关：`/dke toggle` 持久化关闭接收普通播报。
-- GUI 主题仓库：`/dke gui` 或 `/dke theme gui` 打开可美化菜单，主题列表按 `themes.yml` 自动分页，新增主题无需同步改按钮位。
+- GUI 主题仓库：`/dke theme` 或 `/dke gui` 打开可美化菜单，主题列表按 `themes.yml` 自动分页，新增主题无需同步改按钮位。
 - SQLite 默认存储，MySQL 可选，HikariCP 连接池。
 - PlaceholderAPI softdepend，存在时通过缓存后的反射桥接解析占位符。
 
@@ -45,10 +45,11 @@ mvn clean package
 - `/dreamkillecho help`，别名 `/dke`、`/killecho`
 - `/dke reload`
 - `/dke toggle`
+- `/dke theme`
 - `/dke gui`
 - `/dke theme list`
-- `/dke theme set <theme>`
-- `/dke theme preview <theme>`
+- `/dke set <theme>`
+- `/dke preview <theme>`
 - `/dke custom set <message>`
 - `/dke custom preview`
 - `/dke custom reset`
