@@ -124,8 +124,23 @@ class MessageService(
         placeholders: Map<String, String>,
         componentPlaceholders: Map<String, Component>
     ): Component {
-        val parsedTemplate = applyPlaceholderApi(template.replace("<prefix>", prefix), player)
-        return miniMessage.deserialize(parsedTemplate, buildResolver(placeholders, componentPlaceholders))
+        val parsedTemplate = runCatching {
+            applyPlaceholderApi(template.replace("<prefix>", prefix), player)
+        }.getOrElse { throwable ->
+            plugin.logger.warning("[DreamKillEcho] PlaceholderAPI rendering failed, using plain fallback: ${throwable.message}")
+            template.replace("<prefix>", prefix)
+        }
+        return runCatching {
+            miniMessage.deserialize(parsedTemplate, buildResolver(placeholders, componentPlaceholders))
+        }.getOrElse { throwable ->
+            plugin.logger.warning("[DreamKillEcho] MiniMessage rendering failed, using plain fallback: ${throwable.message}")
+            Component.text(fallbackPlainText(template, player, placeholders))
+        }
+    }
+
+    private fun fallbackPlainText(template: String, player: Player?, placeholders: Map<String, String>): String {
+        val rendered = runCatching { renderedString(template, player, placeholders) }.getOrElse { template }
+        return rendered.replace(Regex("<[^>]+>"), "")
     }
 
     private fun buildResolver(

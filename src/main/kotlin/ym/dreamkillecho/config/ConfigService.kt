@@ -121,6 +121,7 @@ class ConfigService private constructor(
         private fun parseStorage(yaml: YamlConfiguration): StorageSettings {
             return StorageSettings(
                 type = yaml.getString("storage.type", "sqlite")!!.lowercase(),
+                shutdownTimeoutSeconds = yaml.getLong("storage.shutdown-timeout-seconds", 5).coerceAtLeast(1),
                 sqliteFile = yaml.getString("sqlite.file", "data.db")!!,
                 mysql = MysqlSettings(
                     host = yaml.getString("mysql.host", "localhost")!!,

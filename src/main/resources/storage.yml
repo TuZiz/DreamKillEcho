@@ -2,6 +2,8 @@
 # type 支持 sqlite / mysql。修改 type 后请重启服务器，不要只热重载。
 storage:
   type: sqlite
+  # 插件关闭时等待最后一次 dirty 数据写回的最长秒数。超时后会记录警告并继续关闭。
+  shutdown-timeout-seconds: 5
 
 # SQLite 默认存储文件，位于插件数据目录下。
 sqlite:

@@ -22,3 +22,5 @@
 20. 修改 `PlayerProfile` 的主题、自定义击杀语、审核状态、播报开关等持久化字段时，必须通过 `StorageService.updateProfile(...)`，禁止外部业务直接修改 profile 后再手工标记 dirty。
 21. 新增或修改数据库字段、索引、查询优化时，必须写入幂等 schema migration，并同时兼容 SQLite 与 MySQL。
 22. Folia 下不得跨区域读取玩家位置、血量、IP 等实体状态；无法可靠实现的能力必须降级并在 README 或日志中说明。
+23. `storage.shutdown-timeout-seconds` 控制关闭时最终 dirty 数据写回等待时间；修改存储生命周期时必须保持可配置并输出 dirtyProfiles / dirtyStats 日志。
+24. Folia 下 `broadcast.range-mode: nearby` 和 `card.mode: nearby` 必须退化为 global 或明确安全快照模式，禁止跨区域实时扫描玩家位置。

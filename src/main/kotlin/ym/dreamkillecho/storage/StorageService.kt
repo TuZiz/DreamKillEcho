@@ -325,20 +325,23 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     fun shutdown() {
         if (shuttingDown) return
         shuttingDown = true
-        plugin.logger.info("[DreamKillEcho] Saving storage data before shutdown (up to 5s)...")
+        val timeoutSeconds = settings.shutdownTimeoutSeconds.coerceAtLeast(1)
+        plugin.logger.info(
+            "[DreamKillEcho] Saving storage data before shutdown (dirtyProfiles=${dirtyProfiles.size}, dirtyStats=${dirtyStats.size}, timeout=${timeoutSeconds}s)..."
+        )
         val flushFuture = try {
             flushAsyncInternal(force = true)
         } catch (ex: Exception) {
             plugin.logger.warning("[DreamKillEcho] Failed to submit final storage flush: ${ex.message}")
             null
         }
-        runCatching { flushFuture?.get(5, TimeUnit.SECONDS) }
+        runCatching { flushFuture?.get(timeoutSeconds, TimeUnit.SECONDS) }
             .onFailure { plugin.logger.warning("[DreamKillEcho] Timed out while flushing storage on shutdown: ${it.message}") }
-        dataSource?.close()
         executor.shutdown()
         if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
             executor.shutdownNow()
         }
+        dataSource?.close()
     }
 
     fun cachedProfiles(): Collection<PlayerProfile> {

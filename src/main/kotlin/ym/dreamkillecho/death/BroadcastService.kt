@@ -138,6 +138,7 @@ class BroadcastService(
     }
 
     private fun nearbyOrFallback(context: DeathContext, range: Double): List<Player> {
+        // Folia cannot safely scan receiver locations across regions here; nearby degrades to global.
         if (foliaMode) return Bukkit.getOnlinePlayers().toList()
         val center = context.killer?.location ?: context.victimLocation ?: return emptyList()
         val squared = range * range

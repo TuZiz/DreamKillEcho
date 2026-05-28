@@ -25,6 +25,8 @@ Folia 兼容通过 `SchedulerAdapter` 运行时检测完成，业务代码禁止
 
 Folia 下不会直接跨区域读取击杀者位置、血量或 IP。`anti-farm.same-ip-no-stats` 在 Folia 环境会降级为不生效，并在控制台输出警告，避免跨区域线程风险。
 
+Folia 下 `broadcast.range-mode: nearby` 和 `card.mode: nearby` 不做跨区域位置扫描，会退化为 `global` 接收范围；真正发送消息、Title、ActionBar、BossBar 仍会通过每个接收玩家的 entity scheduler 执行。
+
 ## 安装方式
 
 1. 执行 `mvn clean package`。
@@ -92,12 +94,17 @@ mvn clean package
 - `dreamkillecho.admin.resetstats`
 - `dreamkillecho.admin.bypass`
 
+`themes.yml` 中每个主题的 `permission` 字段必须和实际权限节点一致，当前默认主题节点都已在 `plugin.yml` 中声明。
+
 ## 配置说明
 
 - `config.yml`：世界限制、广播范围、名片、特效、连杀、防刷、刷新周期。
+- `broadcast.range-mode` / `card.mode`：支持 `global`、`nearby`、`killer` 或名片的 `killer` 模式；Folia 下 `nearby` 不跨区域读取玩家位置，会安全退化为 `global` 接收范围。
 - `effects.bossbar.seconds`：BossBar 展示秒数，最小值为 1，默认 5。
 - `anti-farm.same-victim-record-ttl-seconds`：同一击杀者/受害者反刷记录保留时间，默认 600 秒，惰性清理以避免长期运行内存增长。
 - `anti-farm.revenge-window-seconds`：复仇判定窗口，默认 600 秒，超过窗口的反向击杀不再触发复仇播报。
+- `storage.flush-interval-seconds`：定时 flush 间隔，默认 120 秒。
+- `storage.shutdown-timeout-seconds`：插件关闭时等待最终 dirty 数据写回的最长秒数，默认 5 秒。
 - `lang/zh_cn.yml` / `lang/en_us.yml`：所有可见消息。`config.yml` 中的 `language.default` 优先读取，缺失 key 时回退 `language.fallback`。
 - `themes.yml`：击杀主题、展示名、权限、自动选择优先级 `priority`、MiniMessage 模板。`priority` 越高，玩家未手动选择主题时越优先自动使用。
 - `gui/theme-menu.yml`：主题仓库 GUI 的标题、`GuiPlain` 布局、`GuiKey` 物品样式、`templates` 主题物品模板。`@` 会自动承载 `themes.yml` 中的主题列表，新增主题通常不需要再改这个文件；修改后执行 `/dke reload` 生效。
@@ -157,6 +164,8 @@ mysql:
 数据库不可用时插件进入降级模式，只使用内存缓存运行，控制台会输出警告。后续玩家加载、查询和定时 flush 会继续尝试重连；dirty profile / stats 不会因为一次 flush 失败被清除，数据库恢复后会尽量写回。
 
 MySQL 连接 URL 默认使用 `characterEncoding=utf8mb4`，用于正常保存中文和 emoji 文本。
+
+Shade 配置中没有对 `sqlite-jdbc` 和 `mysql-connector-j` 做 relocation：这两个驱动依赖标准 JDBC 驱动类名与服务注册，重定位会增加 `DriverManager` 识别风险。当前做法是显式 `Class.forName(...)` 加载驱动，冲突风险主要来自最终包内同时包含多个 JDBC 驱动服务描述，已接受该风险并保留明确的驱动类名。
 
 启动时会执行幂等 schema migration。当前迁移会保留已有表结构，补充 `players.name_lower` 并填充历史数据，同时创建 `players.name_lower`、自定义消息审核、`stats.kills`、`stats.max_streak`、`kill_logs.created_at`、`kill_logs.killer_uuid`、`kill_logs.victim_uuid` 等索引，SQLite 与 MySQL 均按同一版本序列执行。
 

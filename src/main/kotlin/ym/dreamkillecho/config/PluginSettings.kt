@@ -103,6 +103,7 @@ data class AntiFarmSettings(
 
 data class StorageSettings(
     val type: String,
+    val shutdownTimeoutSeconds: Long,
     val sqliteFile: String,
     val mysql: MysqlSettings
 )

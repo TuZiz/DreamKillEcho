@@ -39,22 +39,57 @@ class DreamKillEcho : JavaPlugin() {
                 Resources.ensureDefaults(this, listOf("config.yml", "lang/zh_cn.yml", "lang/en_us.yml", "themes.yml", "storage.yml", "gui/theme-menu.yml"))
                 if (!isEnabled || disabling) return@runAsync
                 val configService = ConfigService.load(this)
-                val messageService = MessageService(this, configService.language, configService.fallbackLanguage)
-                val storage = StorageService(this, configService.storage)
-                storage.start()
-                if (!isEnabled || disabling) {
-                    messageService.close()
-                    storage.shutdown()
-                    return@runAsync
+                schedulerAdapter.runMain {
+                    var built: PluginServices? = null
+                    try {
+                        if (!isEnabled || disabling) return@runMain
+                        val messageService = MessageService(this, configService.language, configService.fallbackLanguage)
+                        val storage = StorageService(this, configService.storage)
+                        built = PluginServices.create(this, schedulerAdapter, configService, messageService, storage)
+                        startStorageAndPublish(built, executor)
+                    } catch (ex: Exception) {
+                        built?.shutdown(closeStorage = false)
+                        handleStartupFailure(ex)
+                    }
                 }
-                val built = PluginServices.create(this, schedulerAdapter, configService, messageService, storage)
+            } catch (ex: Exception) {
+                handleStartupFailure(ex)
+            }
+        }
+    }
+
+    override fun onDisable() {
+        disabling = true
+        HandlerList.unregisterAll(this)
+        val active = services
+        services = null
+        commandRouter?.bind(null)
+        active?.shutdown(closeStorage = false)
+        if (active != null) {
+            Thread({ active.storage.shutdown() }, "DreamKillEcho-StorageShutdown").apply { isDaemon = false }.start()
+        }
+        if (::schedulerAdapter.isInitialized) {
+            schedulerAdapter.cancelAll()
+        }
+    }
+
+    fun replaceServices(services: PluginServices?) {
+        this.services = services
+    }
+
+    private fun startStorageAndPublish(built: PluginServices, executor: CommandRouter) {
+        schedulerAdapter.runAsync {
+            try {
+                built.storage.start()
                 if (!isEnabled || disabling) {
-                    built.shutdown()
+                    schedulerAdapter.runMain { built.shutdown(closeStorage = false) }
+                    built.storage.shutdown()
                     return@runAsync
                 }
                 schedulerAdapter.runMain {
                     if (!isEnabled || disabling) {
-                        Thread({ built.shutdown() }, "DreamKillEcho-AbortStartup").apply { isDaemon = true }.start()
+                        built.shutdown(closeStorage = false)
+                        schedulerAdapter.runAsync { built.storage.shutdown() }
                         return@runMain
                     }
                     services = built
@@ -66,30 +101,20 @@ class DreamKillEcho : JavaPlugin() {
                     logger.info("[DreamKillEcho] Enabled on ${schedulerAdapter.platformName}.")
                 }
             } catch (ex: Exception) {
-                logger.severe("[DreamKillEcho] Startup failed: ${ex.message}")
-                ex.printStackTrace()
-                if (isEnabled && !disabling) {
-                    schedulerAdapter.runMain {
-                        if (isEnabled && !disabling) server.pluginManager.disablePlugin(this)
-                    }
-                }
+                schedulerAdapter.runMain { built.shutdown(closeStorage = false) }
+                built.storage.shutdown()
+                handleStartupFailure(ex)
             }
         }
     }
 
-    override fun onDisable() {
-        disabling = true
-        HandlerList.unregisterAll(this)
-        val active = services
-        services = null
-        commandRouter?.bind(null)
-        active?.shutdown()
-        if (::schedulerAdapter.isInitialized) {
-            schedulerAdapter.cancelAll()
+    private fun handleStartupFailure(ex: Exception) {
+        logger.severe("[DreamKillEcho] Startup failed: ${ex.message}")
+        ex.printStackTrace()
+        if (isEnabled && !disabling) {
+            schedulerAdapter.runMain {
+                if (isEnabled && !disabling) server.pluginManager.disablePlugin(this)
+            }
         }
-    }
-
-    fun replaceServices(services: PluginServices?) {
-        this.services = services
     }
 }

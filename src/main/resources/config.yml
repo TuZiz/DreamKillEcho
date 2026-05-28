@@ -22,6 +22,7 @@ worlds:
 
 # 基础播报设置。
 # range-mode 支持 global / nearby / killer。
+# Folia 下 nearby 不跨区域读取玩家位置，会安全退化为 global 接收范围。
 broadcast:
   enabled: true
   include-vanilla-death-message: false
@@ -31,6 +32,7 @@ broadcast:
 
 # 击杀名片设置。
 # mode 支持 killer / global / nearby。
+# Folia 下 nearby 不跨区域读取玩家位置，会安全退化为 global 接收范围。
 card:
   enabled: true
   mode: killer
