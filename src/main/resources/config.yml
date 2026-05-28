@@ -101,12 +101,12 @@ custom-message:
 streaks:
   enabled: true
   messages:
-    3: "<#ffd966><b>[连杀]</b> <killer> 势不可挡，达成了 3 连杀！</#ffd966>"
-    5: "<#ff8e8b><b>[暴走]</b> <killer> 已经主宰战场，达成 5 连杀！</#ff8e8b>"
-    8: "<#ff6b6b><b>[超神]</b> 谁能赐死？！<killer> 达成 8 连杀！</#ff6b6b>"
-    10: "<gradient:#ff0066:#ffcc00><b>[传说]</b> 宛如神明降临！<killer> 达成 10 连杀！</gradient>"
-  shutdown-message: "<#8ec5ff><b>[终结]</b> <killer> 终结了 <victim> 的 <streak> 连杀！</#8ec5ff>"
-  revenge-message: "<#e0c3fc><b>[复仇]</b> 宿命的对决！<killer> 成功对 <victim> 完成了复仇！</#e0c3fc>"
+    3: "<#facc15><b>连杀开始</b></#facc15> <#7dd3fc><killer></#7dd3fc> 已达成 <#facc15><streak></#facc15> 连杀"
+    5: "<gradient:#fb923c:#ef4444><b>战场升温</b></gradient> <#fde68a><killer></#fde68a> 正在主宰战局，<#fb7185><streak></#fb7185> 连杀"
+    8: "<gradient:#a855f7:#ec4899><b>无人能挡</b></gradient> <#f0abfc><killer></#f0abfc> 已经进入收割节奏，<#facc15><streak></#facc15> 连杀"
+    10: "<gradient:#ef4444:#f97316:#facc15><b>传说降临</b></gradient> <#fde68a><killer></#fde68a> 打出了 <#ffffff><streak></#ffffff> 连杀，全场警戒"
+  shutdown-message: "<gradient:#8ec5ff:#60a5fa><b>连杀终结</b></gradient> <#facc15><killer></#facc15> 终结了 <#fb7185><victim></#fb7185> 的 <#ffffff><streak></#ffffff> 连杀"
+  revenge-message: "<gradient:#e0c3fc:#f9a8d4><b>复仇完成</b></gradient> <#f0abfc><killer></#f0abfc> 向 <#fb7185><victim></#fb7185> 讨回了这一局"
 
 # 防刷屏规则，只影响播报与展示，不影响正常击杀事件。
 anti-spam:

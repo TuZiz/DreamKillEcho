@@ -7,47 +7,47 @@ themes:
     display-name: "默认"
     permission: "dreamkillecho.theme.default"
     priority: 0
-    # 效果: [前缀] PlayerA 用 钻石剑 击败了 PlayerB
-    message: "<prefix> <#a8e6cf><killer></#a8e6cf> <#8c8c8c>用</#8c8c8c> <#e0e0e0><weapon></#e0e0e0> <#8c8c8c>击败了</#8c8c8c> <#ff8a8a><victim></#ff8a8a>"
+    # 效果: [前缀] PlayerA 以 钻石剑 击破 PlayerB [8.0m]
+    message: "<prefix> <#7dd3fc><killer></#7dd3fc> <gray>以</gray> <white><weapon></white> <#facc15>击破</#facc15> <#fb7185><victim></#fb7185> <dark_gray>[<#a3e635><distance>m</#a3e635>]</dark_gray>"
 
   vip:
     display-name: "VIP"
     permission: "dreamkillecho.theme.vip"
     priority: 10
-    # 效果: [VIP] PlayerA 挥舞 钻石剑 斩杀了 PlayerB
-    message: "<gradient:#FFD700:#FFA500><b>[VIP]</b></gradient> <#FFD700><killer></#FFD700> <gray>挥舞</gray> <white><weapon></white> <gray>斩杀了</gray> <#FF8C00><victim></#FF8C00>"
+    # 效果: ✦ VIP PlayerA 挥舞 钻石剑 斩落 PlayerB
+    message: "<gradient:#ffd166:#ff7b00><b>✦ VIP</b></gradient> <#ffd166><killer></#ffd166> <gray>挥舞</gray> <white><weapon></white> <#ff9f1c>斩落</#ff9f1c> <#ff6b6b><victim></#ff6b6b>"
 
   vip-plus:
     display-name: "VIP+"
     permission: "dreamkillecho.theme.vipplus"
     priority: 20
-    # 效果: [VIP+] PlayerA 持 钻石剑 无情终结了 PlayerB
-    message: "<gradient:#FFA500:#FF4500><b>[VIP+]</b></gradient> <#FFB6C1><killer></#FFB6C1> <gray>持</gray> <white><weapon></white> <#ff5c5c>无情终结了</#ff5c5c> <#DC143C><victim></#DC143C>"
+    # 效果: ✦ VIP+ PlayerA 持 钻石剑 无情终结 PlayerB
+    message: "<gradient:#ffb703:#fb5607><b>✦ VIP+</b></gradient> <#ffcf70><killer></#ffcf70> <gray>持</gray> <white><weapon></white> <#ff6b35>无情终结</#ff6b35> <#ff8fab><victim></#ff8fab>"
 
   mvp:
     display-name: "MVP"
     permission: "dreamkillecho.theme.mvp"
     priority: 30
-    # 效果: [MVP] PlayerA (20❤) 凭借 钻石剑 强势淘汰 PlayerB
-    message: "<gradient:#00BFFF:#8A2BE2><b>[MVP]</b></gradient> <#87CEFA><killer></#87CEFA> <#696969>(<#FF69B4><killer_health>❤</#FF69B4>)</#696969> <gray>凭借</gray> <#E6E6FA><weapon></#E6E6FA> <#9370DB>强势淘汰</#9370DB> <#DDA0DD><victim></#DDA0DD>"
+    # 效果: ◆ MVP PlayerA 凭借 钻石剑 强势终结 PlayerB
+    message: "<gradient:#38bdf8:#8b5cf6><b>◆ MVP</b></gradient> <#7dd3fc><killer></#7dd3fc> <dark_gray>(<#fb7185><killer_health>❤</#fb7185>)</dark_gray> <gray>凭借</gray> <#e0f2fe><weapon></#e0f2fe> <#a78bfa>强势终结</#a78bfa> <#f0abfc><victim></#f0abfc>"
 
   mvp-plus:
     display-name: "MVP+"
     permission: "dreamkillecho.theme.mvpplus"
     priority: 40
-    # 效果: [MVP+] PlayerA 以 钻石剑 彻底粉碎了 PlayerB
-    message: "<gradient:#00FFFF:#0055FF><b>[MVP+]</b></gradient> <#00FFFF><killer></#00FFFF> <gray>以</gray> <#E0FFFF><weapon></#E0FFFF> <#4169E1>彻底粉碎了</#4169E1> <#FF1493><victim></#FF1493>"
+    # 效果: ◆ MVP+ PlayerA 以 钻石剑 粉碎 PlayerB 的防线
+    message: "<gradient:#22d3ee:#2563eb><b>◆ MVP+</b></gradient> <#67e8f9><killer></#67e8f9> <gray>以</gray> <#e0ffff><weapon></#e0ffff> <#60a5fa>粉碎</#60a5fa> <#f472b6><victim></#f472b6> <dark_gray>的防线</dark_gray>"
 
   svip:
     display-name: "SVIP"
     permission: "dreamkillecho.theme.svip"
     priority: 50
-    # 效果: [SVIP] PlayerA 使用 钻石剑 降下神罚, 抹除了 PlayerB
-    message: "<gradient:#FF0000:#FF8C00:#FFD700><b>[SVIP]</b></gradient> <#FFD700><killer></#FFD700> <gray>使用</gray> <white><weapon></white> <gradient:#FF4500:#FF0000>降下神罚, 抹除了</gradient> <#8B0000><victim></#8B0000>"
+    # 效果: ⚔ SVIP PlayerA 召来 钻石剑 审判了 PlayerB
+    message: "<gradient:#ef4444:#f97316:#facc15><b>⚔ SVIP</b></gradient> <#fde68a><killer></#fde68a> <gray>召来</gray> <white><weapon></white> <gradient:#fb7185:#ef4444>审判了</gradient> <#fecaca><victim></#fecaca>"
 
   love:
     display-name: "心动"
     permission: "dreamkillecho.theme.love"
     priority: 15
-    # 效果: [❤] PlayerA 用 钻石剑 温柔地带走了 PlayerB ~
-    message: "<gradient:#FFB6C1:#FF69B4><b>[❤]</b></gradient> <#FFC0CB><killer></#FFC0CB> <#ffdbf0>用</#ffdbf0> <white><weapon></white> <#FF1493>温柔地带走了</#FF1493> <#FFB6C1><victim></#FFB6C1> <#FF69B4>~</#FF69B4>"
+    # 效果: ❤ PlayerA 用 钻石剑 温柔收下 PlayerB
+    message: "<gradient:#f9a8d4:#ec4899><b>❤ 心动</b></gradient> <#fbcfe8><killer></#fbcfe8> <#fce7f3>用</#fce7f3> <white><weapon></white> <#f472b6>温柔收下</#f472b6> <#fda4af><victim></#fda4af>"
