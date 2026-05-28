@@ -70,13 +70,13 @@ mvn clean package
 
 - `dreamkillecho.use`
 - `dreamkillecho.toggle`
-- `dreamkillecho.theme.default`
-- `dreamkillecho.theme.vip`
-- `dreamkillecho.theme.vipplus`
-- `dreamkillecho.theme.mvp`
-- `dreamkillecho.theme.mvpplus`
-- `dreamkillecho.theme.svip`
-- `dreamkillecho.theme.love`
+- `dreamkillecho.default`
+- `dreamkillecho.vip`
+- `dreamkillecho.vipplus`
+- `dreamkillecho.mvp`
+- `dreamkillecho.mvpplus`
+- `dreamkillecho.svip`
+- `dreamkillecho.love`
 - `dreamkillecho.effect.title`
 - `dreamkillecho.effect.actionbar`
 - `dreamkillecho.effect.sound`
@@ -181,7 +181,7 @@ Shade 配置中没有对 `sqlite-jdbc` 和 `mysql-connector-j` 做 relocation：
 - 修改主题后没生效：执行 `/dke reload`。
 - 修改 GUI 后没生效：确认修改的是 `plugins/DreamKillEcho/gui/theme-menu.yml`，并且 `GuiPlain`、`GuiKey`、`templates` 的字符与函数定义正确；如果只是新增主题，一般只需要改 `themes.yml`，然后执行 `/dke reload`。
 - 修改 `storage.type` 后没切换：存储连接池不会热切换，需要重启。
-- 玩家看不到主题：检查 LuckPerms 是否发放对应 `dreamkillecho.theme.<theme>` 权限。默认会员主题节点为 `dreamkillecho.theme.vip`、`dreamkillecho.theme.vipplus`、`dreamkillecho.theme.mvp`、`dreamkillecho.theme.mvpplus`、`dreamkillecho.theme.svip`，额外个性主题为 `dreamkillecho.theme.love`。
+- 玩家看不到主题：检查 LuckPerms 是否发放对应 `dreamkillecho.<theme>` 权限。默认会员主题节点为 `dreamkillecho.vip`、`dreamkillecho.vipplus`、`dreamkillecho.mvp`、`dreamkillecho.mvpplus`、`dreamkillecho.svip`，额外个性主题为 `dreamkillecho.love`。
 - 自定义击杀语未显示：默认需要审核，通过 `/dke approve <player>`。
 
 ## Folia 注意事项

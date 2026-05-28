@@ -17,19 +17,19 @@ permissions:
     default: true
   dreamkillecho.toggle:
     default: true
-  dreamkillecho.theme.default:
+  dreamkillecho.default:
     default: true
-  dreamkillecho.theme.vip:
+  dreamkillecho.vip:
     default: op
-  dreamkillecho.theme.vipplus:
+  dreamkillecho.vipplus:
     default: op
-  dreamkillecho.theme.mvp:
+  dreamkillecho.mvp:
     default: op
-  dreamkillecho.theme.mvpplus:
+  dreamkillecho.mvpplus:
     default: op
-  dreamkillecho.theme.svip:
+  dreamkillecho.svip:
     default: op
-  dreamkillecho.theme.love:
+  dreamkillecho.love:
     default: op
   dreamkillecho.effect.title:
     default: op
