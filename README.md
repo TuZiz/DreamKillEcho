@@ -49,7 +49,6 @@ mvn clean package
 - `/dke theme`
 - `/dke gui`
 - `/dke set <theme>`
-- `/dke preview <theme>`
 - `/dke stats <player>`
 - `/dke top kills`
 - `/dke top streak`

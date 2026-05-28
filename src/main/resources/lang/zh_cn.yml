@@ -16,7 +16,6 @@ help:
   - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke toggle</#74b9ff> <dark_gray>»</dark_gray> <gray>开启或屏蔽全局击杀播报</gray>"
   - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke theme</#74b9ff> <dark_gray>»</dark_gray> <gray>打开主题仓库 GUI，查看并切换播报主题</gray>"
   - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke set <主题></#74b9ff> <dark_gray>»</dark_gray> <gray>直接切换播报主题</gray>"
-  - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke preview <主题></#74b9ff> <dark_gray>»</dark_gray> <gray>预览指定播报主题</gray>"
   - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke stats <player></#74b9ff> <dark_gray>»</dark_gray> <gray>查询个人战绩与连杀数据</gray>"
   - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke top [kills|streak]</#74b9ff> <dark_gray>»</dark_gray> <gray>查看全服击杀与连杀排行榜</gray>"
   - ""
@@ -29,7 +28,6 @@ theme-locked: "<#ff7675>[✖ 未解锁]</#ff7675>"
 theme-set-success: "<prefix> <#55efc4>✔ 完美！已成功将你的主题切换至 </#55efc4><white><theme></white>"
 theme-no-permission: "<prefix> <#ff7675>✖ 你尚未解锁该主题，可以通过活动或赞助获取。</#ff7675>"
 theme-not-found: "<prefix> <#ff7675>✖ 找不到该主题，请检查输入名称是否正确。</#ff7675>"
-theme-preview: "<prefix> <#a29bfe>✦ 效果预览:</#a29bfe> <white><message></white>"
 
 # --- [ 自定义击杀语 ] ---
 custom-set-pending: "<prefix> <#fdcb6e>⏳ 你的自定义击杀语已提交，请耐心等待管理员审核。</#fdcb6e>"
