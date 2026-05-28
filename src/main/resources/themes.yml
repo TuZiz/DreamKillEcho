@@ -11,39 +11,39 @@ themes:
     message: "<prefix> <#7dd3fc><killer></#7dd3fc> <gray>以</gray> <white><weapon></white> <#facc15>击破</#facc15> <#fb7185><victim></#fb7185> <dark_gray>[<#a3e635><distance>m</#a3e635>]</dark_gray>"
 
   vip:
-    display-name: "VIP"
+    display-name: "烈焰"
     permission: "dreamkillecho.vip"
     priority: 10
-    # 效果: ✦ VIP PlayerA 挥舞 钻石剑 斩落 PlayerB
-    message: "<gradient:#ffd166:#ff7b00><b>✦ VIP</b></gradient> <#ffd166><killer></#ffd166> <gray>挥舞</gray> <white><weapon></white> <#ff9f1c>斩落</#ff9f1c> <#ff6b6b><victim></#ff6b6b>"
+    # 效果: ✦ 烈焰 PlayerA 挥舞 钻石剑 斩落 PlayerB
+    message: "<gradient:#ffd166:#ff7b00><b>✦ 烈焰</b></gradient> <#ffd166><killer></#ffd166> <gray>挥舞</gray> <white><weapon></white> <#ff9f1c>斩落</#ff9f1c> <#ff6b6b><victim></#ff6b6b>"
 
   vip-plus:
-    display-name: "VIP+"
+    display-name: "破军"
     permission: "dreamkillecho.vipplus"
     priority: 20
-    # 效果: ✦ VIP+ PlayerA 持 钻石剑 无情终结 PlayerB
-    message: "<gradient:#ffb703:#fb5607><b>✦ VIP+</b></gradient> <#ffcf70><killer></#ffcf70> <gray>持</gray> <white><weapon></white> <#ff6b35>无情终结</#ff6b35> <#ff8fab><victim></#ff8fab>"
+    # 效果: ✦ 破军 PlayerA 持 钻石剑 无情终结 PlayerB
+    message: "<gradient:#ffb703:#fb5607><b>✦ 破军</b></gradient> <#ffcf70><killer></#ffcf70> <gray>持</gray> <white><weapon></white> <#ff6b35>无情终结</#ff6b35> <#ff8fab><victim></#ff8fab>"
 
   mvp:
-    display-name: "MVP"
+    display-name: "星河"
     permission: "dreamkillecho.mvp"
     priority: 30
-    # 效果: ◆ MVP PlayerA 凭借 钻石剑 强势终结 PlayerB
-    message: "<gradient:#38bdf8:#8b5cf6><b>◆ MVP</b></gradient> <#7dd3fc><killer></#7dd3fc> <dark_gray>(<#fb7185><killer_health>❤</#fb7185>)</dark_gray> <gray>凭借</gray> <#e0f2fe><weapon></#e0f2fe> <#a78bfa>强势终结</#a78bfa> <#f0abfc><victim></#f0abfc>"
+    # 效果: ◆ 星河 PlayerA 凭借 钻石剑 强势终结 PlayerB
+    message: "<gradient:#38bdf8:#8b5cf6><b>◆ 星河</b></gradient> <#7dd3fc><killer></#7dd3fc> <dark_gray>(<#fb7185><killer_health>❤</#fb7185>)</dark_gray> <gray>凭借</gray> <#e0f2fe><weapon></#e0f2fe> <#a78bfa>强势终结</#a78bfa> <#f0abfc><victim></#f0abfc>"
 
   mvp-plus:
-    display-name: "MVP+"
+    display-name: "霜雷"
     permission: "dreamkillecho.mvpplus"
     priority: 40
-    # 效果: ◆ MVP+ PlayerA 以 钻石剑 粉碎 PlayerB 的防线
-    message: "<gradient:#22d3ee:#2563eb><b>◆ MVP+</b></gradient> <#67e8f9><killer></#67e8f9> <gray>以</gray> <#e0ffff><weapon></#e0ffff> <#60a5fa>粉碎</#60a5fa> <#f472b6><victim></#f472b6> <dark_gray>的防线</dark_gray>"
+    # 效果: ◆ 霜雷 PlayerA 以 钻石剑 粉碎 PlayerB 的防线
+    message: "<gradient:#22d3ee:#2563eb><b>◆ 霜雷</b></gradient> <#67e8f9><killer></#67e8f9> <gray>以</gray> <#e0ffff><weapon></#e0ffff> <#60a5fa>粉碎</#60a5fa> <#f472b6><victim></#f472b6> <dark_gray>的防线</dark_gray>"
 
   svip:
-    display-name: "SVIP"
+    display-name: "审判"
     permission: "dreamkillecho.svip"
     priority: 50
-    # 效果: ⚔ SVIP PlayerA 召来 钻石剑 审判了 PlayerB
-    message: "<gradient:#ef4444:#f97316:#facc15><b>⚔ SVIP</b></gradient> <#fde68a><killer></#fde68a> <gray>召来</gray> <white><weapon></white> <gradient:#fb7185:#ef4444>审判了</gradient> <#fecaca><victim></#fecaca>"
+    # 效果: ⚔ 审判 PlayerA 召来 钻石剑 审判了 PlayerB
+    message: "<gradient:#ef4444:#f97316:#facc15><b>⚔ 审判</b></gradient> <#fde68a><killer></#fde68a> <gray>召来</gray> <white><weapon></white> <gradient:#fb7185:#ef4444>审判了</gradient> <#fecaca><victim></#fecaca>"
 
   love:
     display-name: "心动"

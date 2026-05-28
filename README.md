@@ -1,11 +1,11 @@
 # DreamKillEcho
 
-DreamKillEcho 是一个 Kotlin + Maven 编写的 Minecraft 击杀播报 / 死亡播报 / VIP 展示插件。插件只提供装饰型、展示型、个性化功能，不提供击杀回血、伤害加成、额外收益、免掉落等 P2W 能力。
+DreamKillEcho 是一个 Kotlin + Maven 编写的 Minecraft 击杀播报 / 死亡播报 / 主题展示插件。插件只提供装饰型、展示型、个性化功能，不提供击杀回血、伤害加成、额外收益、免掉落等 P2W 能力。
 
 ## 功能列表
 
 - PlayerDeathEvent 击杀与死亡识别：玩家近战、远程投掷物、生物、环境死亡与 unknown 兜底。
-- VIP / MVP / SVIP 击杀主题：通过权限解锁，支持 MiniMessage、十六进制颜色、渐变；未手动选择主题时自动使用玩家拥有的最高 `priority` 主题。
+- 击杀播报主题：通过权限解锁，支持 MiniMessage、十六进制颜色、渐变；未手动选择主题时自动使用玩家拥有的最高 `priority` 主题。
 - 展示特效：Title、ActionBar、Sound、Particle、Firework、BossBar，带全局限流。
 - 击杀名片：可配置内容，支持仅击杀者、全服、附近玩家。
 - 连杀系统：kills、deaths、current_streak、max_streak、终结连杀、复仇击杀。
@@ -115,7 +115,7 @@ mvn clean package
 - `<theme>`：当前主题显示名。
 - `<server>`：配置中的服务器名称。
 
-## VIP/MVP/SVIP 商城建议
+## 商城建议
 
 只销售展示型权限，例如主题、Title、ActionBar、粒子、名片。不要销售击杀回血、伤害加成、额外金币、额外经验、免掉落、战斗属性等破坏公平性的能力。
 
