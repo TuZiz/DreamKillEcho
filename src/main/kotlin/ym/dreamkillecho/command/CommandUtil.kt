@@ -34,6 +34,7 @@ object CommandUtil {
 
     fun previewPlaceholders(player: Player, theme: String, services: PluginServices): Map<String, String> {
         val stats = services.storage.stats(player.uniqueId)
+        val killTheme = services.themes.require(theme)
         return mapOf(
             "killer" to player.name,
             "victim" to player.name,
@@ -47,7 +48,10 @@ object CommandUtil {
             "max_streak" to stats.maxStreak.toString(),
             "death_cause" to "preview",
             "prefix" to services.messages.prefix,
-            "theme" to theme,
+            "theme" to (killTheme?.displayName ?: theme),
+            "theme_id" to (killTheme?.id ?: theme),
+            "rarity" to (killTheme?.rarity ?: ""),
+            "theme_rarity" to (killTheme?.rarity ?: ""),
             "server" to services.config.settings.serverName
         )
     }

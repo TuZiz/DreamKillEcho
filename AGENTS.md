@@ -24,3 +24,4 @@
 22. Folia 下不得跨区域读取玩家位置、血量、IP 等实体状态；无法可靠实现的能力必须降级并在 README 或日志中说明。
 23. `storage.shutdown-timeout-seconds` 控制关闭时最终 dirty 数据写回等待时间；修改存储生命周期时必须保持可配置并输出 dirtyProfiles / dirtyStats 日志。
 24. Folia 下 `broadcast.range-mode: nearby` 和 `card.mode: nearby` 必须退化为 global 或明确安全快照模式，禁止跨区域实时扫描玩家位置。
+25. 主题配置使用 `rarity` 作为展示稀有度；玩家未手动选择主题时必须回退 `default`，禁止恢复 `priority` 自动高权限主题选择。

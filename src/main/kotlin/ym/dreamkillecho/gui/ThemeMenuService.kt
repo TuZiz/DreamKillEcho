@@ -218,8 +218,8 @@ class ThemeMenuService(
             "theme_name" to theme.displayName,
             "permission" to theme.permission,
             "theme_permission" to theme.permission,
-            "priority" to theme.priority.toString(),
-            "theme_priority" to theme.priority.toString(),
+            "rarity" to theme.rarity,
+            "theme_rarity" to theme.rarity,
             "theme_status" to status,
             "theme_message" to theme.message,
             "index" to absoluteIndex.toString(),
@@ -234,7 +234,7 @@ class ThemeMenuService(
             "theme_status" to messages.component(status, player, itemPlaceholders),
             "current" to messages.component(currentTheme.displayName, player, itemPlaceholders),
             "current_theme" to messages.component(currentTheme.displayName, player, itemPlaceholders),
-            "theme_preview" to messages.component(theme.message, player, themePreviewPlaceholders(player, theme.displayName))
+            "theme_preview" to messages.component(theme.message, player, themePreviewPlaceholders(player, theme))
         )
         return buildItem(
             template,
@@ -344,7 +344,7 @@ class ThemeMenuService(
         )
     }
 
-    private fun themePreviewPlaceholders(player: Player, themeName: String): Map<String, String> {
+    private fun themePreviewPlaceholders(player: Player, theme: KillTheme): Map<String, String> {
         return mapOf(
             "killer" to player.name,
             "victim" to "Steve",
@@ -358,7 +358,10 @@ class ThemeMenuService(
             "max_streak" to "8",
             "death_cause" to "preview",
             "prefix" to messages.prefix,
-            "theme" to themeName,
+            "theme" to theme.displayName,
+            "theme_id" to theme.id,
+            "rarity" to theme.rarity,
+            "theme_rarity" to theme.rarity,
             "server" to plugin.server.name
         )
     }

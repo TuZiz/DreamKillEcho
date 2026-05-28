@@ -64,13 +64,22 @@ class DeathListener(private val plugin: DreamKillEcho) : Listener {
         )
         val existingVictimStats = services.storage.stats(context.victimUuid)
         var previousVictimStreak = existingVictimStats.currentStreak
-        val themeName = killer?.let {
+        val killTheme = killer?.let {
             services.themes.firstAvailable(
                 it,
                 services.storage.profile(it.uniqueId, it.name).selectedTheme
-            ).displayName
-        } ?: "default"
-        services.deathAnalyzer.fillPlaceholders(context, 0, existingVictimStats.maxStreak, services.messages.prefix, themeName, services.config.settings.serverName)
+            )
+        } ?: services.themes.defaultTheme()
+        services.deathAnalyzer.fillPlaceholders(
+            context,
+            0,
+            existingVictimStats.maxStreak,
+            services.messages.prefix,
+            killTheme.displayName,
+            services.config.settings.serverName,
+            killTheme.rarity,
+            killTheme.id
+        )
         if (allowStats) {
             val update = services.storage.recordDeath(context.victimUuid, context.killerUuid, process.countStats)
             previousVictimStreak = update.previousVictimStreak
@@ -80,11 +89,22 @@ class DeathListener(private val plugin: DreamKillEcho) : Listener {
                     update.killerStreak,
                     update.killerMaxStreak,
                     services.messages.prefix,
-                    themeName,
-                    services.config.settings.serverName
+                    killTheme.displayName,
+                    services.config.settings.serverName,
+                    killTheme.rarity,
+                    killTheme.id
                 )
             } else {
-                services.deathAnalyzer.fillPlaceholders(context, 0, update.victimMaxStreak, services.messages.prefix, "default", services.config.settings.serverName)
+                services.deathAnalyzer.fillPlaceholders(
+                    context,
+                    0,
+                    update.victimMaxStreak,
+                    services.messages.prefix,
+                    killTheme.displayName,
+                    services.config.settings.serverName,
+                    killTheme.rarity,
+                    killTheme.id
+                )
             }
         }
         if (allowBroadcast && process.shouldBroadcast) {

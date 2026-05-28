@@ -116,7 +116,16 @@ class DeathAnalyzer(
         }
     }
 
-    fun fillPlaceholders(context: DeathContext, streak: Int, maxStreak: Int, prefix: String, theme: String, server: String) {
+    fun fillPlaceholders(
+        context: DeathContext,
+        streak: Int,
+        maxStreak: Int,
+        prefix: String,
+        theme: String,
+        server: String,
+        rarity: String = "",
+        themeId: String = ""
+    ) {
         context.placeholders += mapOf(
             "killer" to (context.killerName ?: messages.raw("unknown-player")),
             "victim" to context.victimName,
@@ -131,6 +140,9 @@ class DeathAnalyzer(
             "death_cause" to context.deathCause,
             "prefix" to prefix,
             "theme" to theme,
+            "theme_id" to themeId,
+            "rarity" to rarity,
+            "theme_rarity" to rarity,
             "server" to server
         )
     }

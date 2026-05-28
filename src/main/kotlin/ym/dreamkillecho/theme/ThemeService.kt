@@ -9,18 +9,27 @@ data class KillTheme(
     val id: String,
     val displayName: String,
     val permission: String,
-    val priority: Int,
+    val rarity: String,
     val message: String
 )
 
 class ThemeService(private val plugin: JavaPlugin, yaml: YamlConfiguration) {
     private val themes: Map<String, KillTheme> = loadThemes(yaml)
 
-    fun all(): List<KillTheme> = themes.values.sortedWith(compareByDescending<KillTheme> { it.priority }.thenBy { it.id })
+    fun all(): List<KillTheme> = themes.values.toList()
 
     fun get(id: String?): KillTheme? = themes[id ?: "default"] ?: themes["default"]
 
     fun require(id: String): KillTheme? = themes[id]
+
+    fun defaultTheme(): KillTheme = themes["default"] ?: themes.values.first()
+
+    fun selectedOrDefault(selected: String?): KillTheme {
+        if (!selected.isAutoTheme()) {
+            require(selected!!)?.let { return it }
+        }
+        return defaultTheme()
+    }
 
     fun isUnlocked(player: Player, theme: KillTheme): Boolean = player.hasPermission(theme.permission)
 
@@ -35,40 +44,32 @@ class ThemeService(private val plugin: JavaPlugin, yaml: YamlConfiguration) {
             val selectedTheme = require(selected!!)
             if (selectedTheme != null && isUnlocked(player, selectedTheme)) return selectedTheme
         }
-        return highestAvailable(player)
-    }
-
-    private fun highestAvailable(player: Player): KillTheme {
-        return themes.values
-            .filter { isUnlocked(player, it) }
-            .maxWithOrNull(compareBy<KillTheme> { it.priority }.thenBy { it.id })
-            ?: themes["default"]
-            ?: themes.values.first()
+        return defaultTheme()
     }
 
     private fun loadThemes(yaml: YamlConfiguration): Map<String, KillTheme> {
-        val section = yaml.getConfigurationSection("themes") ?: return defaultTheme()
+        val section = yaml.getConfigurationSection("themes") ?: return defaultThemeMap()
         val result = linkedMapOf<String, KillTheme>()
         for (id in section.getKeys(false)) {
             val path = "themes.$id"
             val display = yaml.getString("$path.display-name")
             val permission = yaml.getString("$path.permission")
-            val priority = yaml.getInt("$path.priority", 0)
+            val rarity = yaml.getString("$path.rarity", "Common")!!
             val message = yaml.getString("$path.message")
             if (display.isNullOrBlank() || permission.isNullOrBlank() || message.isNullOrBlank()) {
                 plugin.logger.warning("[DreamKillEcho] Skipped invalid theme: $id")
                 continue
             }
-            result[id] = KillTheme(id, display, permission, priority, message)
+            result[id] = KillTheme(id, display, permission, rarity, message)
         }
         if ("default" !in result) {
-            result["default"] = defaultTheme().values.first()
+            result["default"] = defaultThemeMap().values.first()
         }
         return result
     }
 
-    private fun defaultTheme(): Map<String, KillTheme> = mapOf(
-        "default" to KillTheme("default", "Default", "dreamkillecho.theme.default", 0, "<prefix> <killer> killed <victim>")
+    private fun defaultThemeMap(): Map<String, KillTheme> = mapOf(
+        "default" to KillTheme("default", "Default", "dreamkillecho.default", "Common", "<prefix> <killer> killed <victim>")
     )
 
     private fun String?.isAutoTheme(): Boolean {

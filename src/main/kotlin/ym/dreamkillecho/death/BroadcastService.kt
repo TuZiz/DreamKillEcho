@@ -109,6 +109,9 @@ class BroadcastService(
     private fun playerKillTemplate(killer: Player, context: DeathContext, placeholders: MutableMap<String, String>): String {
         val theme = themes.firstAvailable(killer, storage.profile(killer.uniqueId, killer.name).selectedTheme)
         placeholders["theme"] = theme.displayName
+        placeholders["theme_id"] = theme.id
+        placeholders["rarity"] = theme.rarity
+        placeholders["theme_rarity"] = theme.rarity
         val profile = storage.profile(killer.uniqueId, killer.name)
         return if (
             settings.custom.useAsThemeMessage &&

@@ -1,53 +1,54 @@
 # 击杀主题配置。
 # 玩家必须拥有对应 permission 才能切换主题。
+# 玩家未手动选择主题时固定使用 default，不再按权限自动选择高级主题。
+# rarity 仅用于展示和占位符，不影响战斗数值。
 # message 支持 MiniMessage、十六进制颜色、渐变色和插件占位符。
-# priority 数值越高，玩家未手动选择主题时越优先自动使用。
 themes:
   default:
     display-name: "默认"
     permission: "dreamkillecho.default"
-    priority: 0
-    # 效果: [前缀] PlayerA 使用 钻石剑 击破了 PlayerB [8.0m]
-    message: "<prefix> <#7dd3fc><killer></#7dd3fc> <gray>使用</gray> <white><weapon></white> <#facc15>击破了</#facc15> <#fb7185><victim></#fb7185> <dark_gray>[<#a3e635><distance>m</#a3e635>]</dark_gray>"
+    rarity: "普通"
+    # 效果: [前缀] PlayerA 使用 钻石剑 击破了 PlayerB [普通]
+    message: "<prefix> <#7dd3fc><killer></#7dd3fc> <gray>使用</gray> <white><weapon></white> <#facc15>击破了</#facc15> <#fb7185><victim></#fb7185> <dark_gray>[<#a3e635><rarity></#a3e635>]</dark_gray>"
 
   blaze:
     display-name: "烈焰"
     permission: "dreamkillecho.blaze"
-    priority: 10
+    rarity: "稀有"
     # 效果: ✦ 烈焰 PlayerA 挥舞 钻石剑 焚尽了 PlayerB
     message: "<gradient:#ffd166:#ff7b00><b>✦ 烈焰</b></gradient> <#ffd166><killer></#ffd166> <gray>挥舞</gray> <white><weapon></white> <#ff9f1c>焚尽了</#ff9f1c> <#ff6b6b><victim></#ff6b6b>"
 
   vanguard:
     display-name: "破军"
     permission: "dreamkillecho.vanguard"
-    priority: 20
+    rarity: "稀有"
     # 效果: ✦ 破军 PlayerA 拔出 钻石剑 无情斩杀了 PlayerB
     message: "<gradient:#ffb703:#fb5607><b>✦ 破军</b></gradient> <#ffcf70><killer></#ffcf70> <gray>拔出</gray> <white><weapon></white> <#ff6b35>无情斩杀了</#ff6b35> <#ff8fab><victim></#ff8fab>"
 
   nebula:
     display-name: "星河"
     permission: "dreamkillecho.nebula"
-    priority: 30
+    rarity: "史诗"
     # 效果: ◆ 星河 PlayerA 携 钻石剑 陨灭了 PlayerB (❤)
     message: "<gradient:#38bdf8:#8b5cf6><b>◆ 星河</b></gradient> <#7dd3fc><killer></#7dd3fc> <dark_gray>(<#fb7185><killer_health>❤</#fb7185>)</dark_gray> <gray>携</gray> <#e0f2fe><weapon></#e0f2fe> <#a78bfa>陨灭了</#a78bfa> <#f0abfc><victim></#f0abfc>"
 
   frost:
     display-name: "霜雷"
     permission: "dreamkillecho.frost"
-    priority: 40
+    rarity: "史诗"
     # 效果: ◆ 霜雷 PlayerA 引 钻石剑 之威，击碎了 PlayerB 的防线
     message: "<gradient:#22d3ee:#2563eb><b>◆ 霜雷</b></gradient> <#67e8f9><killer></#67e8f9> <gray>引</gray> <#e0ffff><weapon></#e0ffff> <gray>之威，</gray><#60a5fa>击碎了</#60a5fa> <#f472b6><victim></#f472b6> <dark_gray>的防线</dark_gray>"
 
   judgment:
     display-name: "审判"
     permission: "dreamkillecho.judgment"
-    priority: 50
+    rarity: "传说"
     # 效果: ⚔ 审判 PlayerA 降下 钻石剑 的神罚，制裁了 PlayerB
     message: "<gradient:#ef4444:#f97316:#facc15><b>⚔ 审判</b></gradient> <#fde68a><killer></#fde68a> <gray>降下</gray> <white><weapon></white> <gray>的神罚，</gray><gradient:#fb7185:#ef4444>制裁了</gradient> <#fecaca><victim></#fecaca>"
 
   love:
     display-name: "心动"
     permission: "dreamkillecho.love"
-    priority: 15
+    rarity: "稀有"
     # 效果: ❤ 心动 PlayerA 用 钻石剑 俘获了 PlayerB 的心
     message: "<gradient:#f9a8d4:#ec4899><b>❤ 心动</b></gradient> <#fbcfe8><killer></#fbcfe8> <#fce7f3>用</#fce7f3> <white><weapon></white> <#f472b6>俘获了</#f472b6> <#fda4af><victim></#fda4af> <#fce7f3>的心</#fce7f3>"

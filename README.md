@@ -5,7 +5,7 @@ DreamKillEcho 是一个 Kotlin + Maven 编写的 Minecraft 击杀播报 / 死亡
 ## 功能列表
 
 - PlayerDeathEvent 击杀与死亡识别：玩家近战、远程投掷物、生物、环境死亡与 unknown 兜底。
-- 击杀播报主题：通过权限解锁，支持 MiniMessage、十六进制颜色、渐变；未手动选择主题时自动使用玩家拥有的最高 `priority` 主题。
+- 击杀播报主题：通过权限解锁，支持 MiniMessage、十六进制颜色、渐变；未手动选择主题时固定使用 `default`，主题可配置展示用 `rarity` 稀有度。
 - 展示特效：Title、ActionBar、Sound、Particle、Firework、BossBar，带全局限流。
 - 击杀名片：可配置内容，支持仅击杀者、全服、附近玩家。
 - 连杀系统：kills、deaths、current_streak、max_streak、终结连杀、复仇击杀。
@@ -14,7 +14,7 @@ DreamKillEcho 是一个 Kotlin + Maven 编写的 Minecraft 击杀播报 / 死亡
 - 玩家开关：`/dke toggle` 持久化关闭接收普通播报。
 - GUI 主题仓库：`/dke theme` 或 `/dke gui` 打开可美化菜单，主题列表按 `themes.yml` 自动分页，新增主题无需同步改按钮位。
 - SQLite 默认存储，MySQL 可选，HikariCP 连接池。
-- PlaceholderAPI softdepend，存在时通过缓存后的反射桥接解析占位符。
+- PlaceholderAPI softdepend，存在时通过缓存后的反射桥接解析占位符，并注册主题展示变量。
 
 ## 兼容说明
 
@@ -92,7 +92,7 @@ mvn clean package
 - `storage.flush-interval-seconds`：定时 flush 间隔，默认 120 秒。
 - `storage.shutdown-timeout-seconds`：插件关闭时等待最终 dirty 数据写回的最长秒数，默认 5 秒。
 - `lang/zh_cn.yml` / `lang/en_us.yml`：所有可见消息。`config.yml` 中的 `language.default` 优先读取，缺失 key 时回退 `language.fallback`。
-- `themes.yml`：击杀主题、展示名、权限、自动选择优先级 `priority`、MiniMessage 模板。`priority` 越高，玩家未手动选择主题时越优先自动使用。
+- `themes.yml`：击杀主题、展示名、权限、展示用稀有度 `rarity`、MiniMessage 模板。玩家未手动选择主题时固定使用 `default`，不会按权限自动选择更高稀有度主题。
 - `gui/theme-menu.yml`：主题仓库 GUI 的标题、`GuiPlain` 布局、`GuiKey` 物品样式、`templates` 主题物品模板。`@` 会自动承载 `themes.yml` 中的主题列表，新增主题通常不需要再改这个文件；修改后执行 `/dke reload` 生效。
 - `storage.yml`：SQLite / MySQL 连接配置。
 
@@ -113,6 +113,8 @@ mvn clean package
 - `<max_streak>`：历史最高连杀数。
 - `<death_cause>`：死亡原因 key。
 - `<theme>`：当前主题显示名。
+- `<theme_id>`：当前主题 ID。
+- `<rarity>` / `<theme_rarity>`：当前主题稀有度，来自 `themes.yml` 的 `rarity` 字段。
 - `<server>`：配置中的服务器名称。
 
 ## 商城建议
@@ -122,6 +124,12 @@ mvn clean package
 ## PlaceholderAPI
 
 PlaceholderAPI 是 softdepend。插件存在时，MessageService 会通过轻量 `PlaceholderBridge` 缓存 `setPlaceholders(Player, String)` 方法后解析消息模板；不存在时自动跳过，不会作为强依赖加载。
+
+本插件会在 PlaceholderAPI 存在时注册 `dreamkillecho` expansion：
+
+- `%dreamkillecho_theme%`：玩家当前主题显示名；未选择时为默认主题。
+- `%dreamkillecho_theme_id%`：玩家当前主题 ID。
+- `%dreamkillecho_theme_rarity%` / `%dreamkillecho_rarity%`：玩家当前主题稀有度。
 
 ## SQLite / MySQL
 
@@ -167,7 +175,7 @@ Shade 配置中没有对 `sqlite-jdbc` 和 `mysql-connector-j` 做 relocation：
 - 修改主题后没生效：执行 `/dke reload`。
 - 修改 GUI 后没生效：确认修改的是 `plugins/DreamKillEcho/gui/theme-menu.yml`，并且 `GuiPlain`、`GuiKey`、`templates` 的字符与函数定义正确；如果只是新增主题，一般只需要改 `themes.yml`，然后执行 `/dke reload`。
 - 修改 `storage.type` 后没切换：存储连接池不会热切换，需要重启。
-- 玩家看不到主题：检查 LuckPerms 是否发放对应 `dreamkillecho.<theme>` 权限。默认主题节点为 `dreamkillecho.blaze`、`dreamkillecho.vanguard`、`dreamkillecho.nebula`、`dreamkillecho.frost`、`dreamkillecho.judgment`，额外个性主题为 `dreamkillecho.love`。
+- 玩家看不到主题：检查 LuckPerms 是否发放对应 `dreamkillecho.<theme>` 权限。默认主题节点为 `dreamkillecho.default`，其余内置主题节点为 `dreamkillecho.blaze`、`dreamkillecho.vanguard`、`dreamkillecho.love`、`dreamkillecho.nebula`、`dreamkillecho.frost`、`dreamkillecho.judgment`。
 
 ## Folia 注意事项
 

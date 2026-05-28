@@ -8,6 +8,7 @@ import ym.dreamkillecho.config.ConfigService
 import ym.dreamkillecho.death.DeathListener
 import ym.dreamkillecho.gui.ThemeMenuListener
 import ym.dreamkillecho.message.MessageService
+import ym.dreamkillecho.placeholder.DreamKillEchoExpansion
 import ym.dreamkillecho.scheduler.SchedulerAdapter
 import ym.dreamkillecho.storage.StorageService
 import ym.dreamkillecho.util.Resources
@@ -25,6 +26,8 @@ class DreamKillEcho : JavaPlugin() {
 
     @Volatile
     private var disabling: Boolean = false
+
+    private var placeholderExpansion: Any? = null
 
     override fun onEnable() {
         disabling = false
@@ -63,6 +66,7 @@ class DreamKillEcho : JavaPlugin() {
         HandlerList.unregisterAll(this)
         val active = services
         services = null
+        unregisterPlaceholderExpansion()
         commandRouter?.bind(null)
         active?.shutdown(closeStorage = false)
         if (active != null) {
@@ -94,6 +98,7 @@ class DreamKillEcho : JavaPlugin() {
                     }
                     services = built
                     executor.bind(built)
+                    registerPlaceholderExpansion()
                     server.pluginManager.registerEvents(DeathListener(this), this)
                     server.pluginManager.registerEvents(ThemeMenuListener(this), this)
                     built.storage.prepareOnlinePlayers(built.scheduler)
@@ -115,6 +120,29 @@ class DreamKillEcho : JavaPlugin() {
             schedulerAdapter.runMain {
                 if (isEnabled && !disabling) server.pluginManager.disablePlugin(this)
             }
+        }
+    }
+
+    private fun registerPlaceholderExpansion() {
+        if (!server.pluginManager.isPluginEnabled("PlaceholderAPI")) return
+        runCatching {
+            unregisterPlaceholderExpansion()
+            val expansion = DreamKillEchoExpansion(this)
+            expansion.register()
+            placeholderExpansion = expansion
+            logger.info("[DreamKillEcho] PlaceholderAPI expansion registered.")
+        }.onFailure {
+            logger.warning("[DreamKillEcho] Failed to register PlaceholderAPI expansion: ${it.message}")
+        }
+    }
+
+    private fun unregisterPlaceholderExpansion() {
+        val expansion = placeholderExpansion ?: return
+        placeholderExpansion = null
+        runCatching {
+            expansion.javaClass.getMethod("unregister").invoke(expansion)
+        }.onFailure {
+            logger.warning("[DreamKillEcho] Failed to unregister PlaceholderAPI expansion: ${it.message}")
         }
     }
 }
