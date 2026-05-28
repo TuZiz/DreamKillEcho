@@ -47,15 +47,7 @@ permissions:
     default: op
   dreamkillecho.card.svip:
     default: op
-  dreamkillecho.custom.message:
-    default: op
-  dreamkillecho.custom.color:
-    default: op
-  dreamkillecho.custom.minimessage:
-    default: op
   dreamkillecho.admin.reload:
-    default: op
-  dreamkillecho.admin.review:
     default: op
   dreamkillecho.admin.stats:
     default: op

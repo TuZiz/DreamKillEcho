@@ -17,7 +17,6 @@ help:
   - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke theme</#74b9ff> <dark_gray>»</dark_gray> <gray>打开主题仓库 GUI，查看并切换播报主题</gray>"
   - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke set <主题></#74b9ff> <dark_gray>»</dark_gray> <gray>直接切换播报主题</gray>"
   - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke preview <主题></#74b9ff> <dark_gray>»</dark_gray> <gray>预览指定播报主题</gray>"
-  - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke custom [set|preview|status]</#74b9ff> <dark_gray>»</dark_gray> <gray>定制独一无二的个人击杀语</gray>"
   - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke stats <player></#74b9ff> <dark_gray>»</dark_gray> <gray>查询个人战绩与连杀数据</gray>"
   - "  <dark_gray>▪</dark_gray> <#74b9ff>/dke top [kills|streak]</#74b9ff> <dark_gray>»</dark_gray> <gray>查看全服击杀与连杀排行榜</gray>"
   - ""

@@ -8,7 +8,6 @@ DreamKillEcho 是一个 Kotlin + Maven 编写的 Minecraft 击杀播报 / 死亡
 - VIP / MVP / SVIP 击杀主题：通过权限解锁，支持 MiniMessage、十六进制颜色、渐变；未手动选择主题时自动使用玩家拥有的最高 `priority` 主题。
 - 展示特效：Title、ActionBar、Sound、Particle、Firework、BossBar，带全局限流。
 - 击杀名片：可配置内容，支持仅击杀者、全服、附近玩家。
-- 自定义击杀语：长度限制、冷却、敏感词过滤、危险 MiniMessage 标签拦截、审核模式。
 - 连杀系统：kills、deaths、current_streak、max_streak、终结连杀、复仇击杀。
 - 防刷屏 / 防刷击杀：同击杀者、同受害者、每分钟广播与特效限流、同受害者反复击杀限制，并对反刷记录做 TTL 清理。
 - 世界限制：blacklist / whitelist，可分别控制播报、统计、特效。
@@ -49,16 +48,8 @@ mvn clean package
 - `/dke toggle`
 - `/dke theme`
 - `/dke gui`
-- `/dke theme list`
 - `/dke set <theme>`
 - `/dke preview <theme>`
-- `/dke custom set <message>`
-- `/dke custom preview`
-- `/dke custom reset`
-- `/dke custom status`
-- `/dke review`
-- `/dke approve <player>`
-- `/dke deny <player>`
 - `/dke stats <player>`
 - `/dke top kills`
 - `/dke top streak`
@@ -85,11 +76,7 @@ mvn clean package
 - `dreamkillecho.effect.bossbar`
 - `dreamkillecho.card.vip`
 - `dreamkillecho.card.svip`
-- `dreamkillecho.custom.message`
-- `dreamkillecho.custom.color`
-- `dreamkillecho.custom.minimessage`
 - `dreamkillecho.admin.reload`
-- `dreamkillecho.admin.review`
 - `dreamkillecho.admin.stats`
 - `dreamkillecho.admin.resetstats`
 - `dreamkillecho.admin.bypass`
@@ -131,7 +118,7 @@ mvn clean package
 
 ## VIP/MVP/SVIP 商城建议
 
-只销售展示型权限，例如主题、Title、ActionBar、粒子、名片、自定义击杀语。不要销售击杀回血、伤害加成、额外金币、额外经验、免掉落、战斗属性等破坏公平性的能力。
+只销售展示型权限，例如主题、Title、ActionBar、粒子、名片。不要销售击杀回血、伤害加成、额外金币、额外经验、免掉落、战斗属性等破坏公平性的能力。
 
 ## PlaceholderAPI
 
@@ -182,19 +169,16 @@ Shade 配置中没有对 `sqlite-jdbc` 和 `mysql-connector-j` 做 relocation：
 - 修改 GUI 后没生效：确认修改的是 `plugins/DreamKillEcho/gui/theme-menu.yml`，并且 `GuiPlain`、`GuiKey`、`templates` 的字符与函数定义正确；如果只是新增主题，一般只需要改 `themes.yml`，然后执行 `/dke reload`。
 - 修改 `storage.type` 后没切换：存储连接池不会热切换，需要重启。
 - 玩家看不到主题：检查 LuckPerms 是否发放对应 `dreamkillecho.<theme>` 权限。默认会员主题节点为 `dreamkillecho.vip`、`dreamkillecho.vipplus`、`dreamkillecho.mvp`、`dreamkillecho.mvpplus`、`dreamkillecho.svip`，额外个性主题为 `dreamkillecho.love`。
-- 自定义击杀语未显示：默认需要审核，通过 `/dke approve <player>`。
 
 ## Folia 注意事项
 
 不要在新增业务代码中直接调用 `Bukkit.getScheduler()`，不要 import Folia 专属类。实体、世界、粒子、声音、BossBar 操作必须通过 `SchedulerAdapter` 回到正确调度上下文。
 
-玩家 `PlayerProfile` 的主题、自定义击杀语、审核状态、播报开关等持久化字段必须通过 `StorageService.updateProfile(...)` 修改，避免并发 flush 读到半更新状态。
+玩家 `PlayerProfile` 的主题、审核状态、播报开关等持久化字段必须通过 `StorageService.updateProfile(...)` 修改，避免并发 flush 读到半更新状态。
 
 ## Production hardening notes
 
-- Custom kill message permissions are layered: `dreamkillecho.custom.message` only allows setting a message; `dreamkillecho.custom.color` allows color, hex color, `gradient`, and `rainbow` tags; `dreamkillecho.custom.minimessage` allows the configured MiniMessage safe subset.
-- Player custom messages still reject `click`, `hover`, `insertion`, `selector`, `score`, `nbt`, `keybind`, `translatable`, `font`, and `transition` tags even with `dreamkillecho.custom.minimessage`. Without `custom.minimessage`, player input is stored as escaped plain text and is not parsed as MiniMessage formatting.
-- On Folia, player-kill handling switches to the killer entity scheduler before reading killer name, weapon, health, location, theme, permissions, custom message, or effect state. `anti-farm.same-ip-no-stats` remains degraded on Folia because cross-region player IP reads are not reliable.
+- On Folia, player-kill handling switches to the killer entity scheduler before reading killer name, weapon, health, location, theme, permissions, or effect state. `anti-farm.same-ip-no-stats` remains degraded on Folia because cross-region player IP reads are not reliable.
 - Kill log writes follow `worlds.blocked-world-stats`; worlds where stats are disabled do not write kill log rows.
 
 ## TODO
