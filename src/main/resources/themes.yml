@@ -7,47 +7,47 @@ themes:
     display-name: "默认"
     permission: "dreamkillecho.default"
     priority: 0
-    # 效果: [前缀] PlayerA 以 钻石剑 击破 PlayerB [8.0m]
-    message: "<prefix> <#7dd3fc><killer></#7dd3fc> <gray>以</gray> <white><weapon></white> <#facc15>击破</#facc15> <#fb7185><victim></#fb7185> <dark_gray>[<#a3e635><distance>m</#a3e635>]</dark_gray>"
+    # 效果: [前缀] PlayerA 使用 钻石剑 击破了 PlayerB [8.0m]
+    message: "<prefix> <#7dd3fc><killer></#7dd3fc> <gray>使用</gray> <white><weapon></white> <#facc15>击破了</#facc15> <#fb7185><victim></#fb7185> <dark_gray>[<#a3e635><distance>m</#a3e635>]</dark_gray>"
 
-  vip:
+  blaze:
     display-name: "烈焰"
-    permission: "dreamkillecho.vip"
+    permission: "dreamkillecho.blaze"
     priority: 10
-    # 效果: ✦ 烈焰 PlayerA 挥舞 钻石剑 斩落 PlayerB
-    message: "<gradient:#ffd166:#ff7b00><b>✦ 烈焰</b></gradient> <#ffd166><killer></#ffd166> <gray>挥舞</gray> <white><weapon></white> <#ff9f1c>斩落</#ff9f1c> <#ff6b6b><victim></#ff6b6b>"
+    # 效果: ✦ 烈焰 PlayerA 挥舞 钻石剑 焚尽了 PlayerB
+    message: "<gradient:#ffd166:#ff7b00><b>✦ 烈焰</b></gradient> <#ffd166><killer></#ffd166> <gray>挥舞</gray> <white><weapon></white> <#ff9f1c>焚尽了</#ff9f1c> <#ff6b6b><victim></#ff6b6b>"
 
-  vip-plus:
+  vanguard:
     display-name: "破军"
-    permission: "dreamkillecho.vipplus"
+    permission: "dreamkillecho.vanguard"
     priority: 20
-    # 效果: ✦ 破军 PlayerA 持 钻石剑 无情终结 PlayerB
-    message: "<gradient:#ffb703:#fb5607><b>✦ 破军</b></gradient> <#ffcf70><killer></#ffcf70> <gray>持</gray> <white><weapon></white> <#ff6b35>无情终结</#ff6b35> <#ff8fab><victim></#ff8fab>"
+    # 效果: ✦ 破军 PlayerA 拔出 钻石剑 无情斩杀了 PlayerB
+    message: "<gradient:#ffb703:#fb5607><b>✦ 破军</b></gradient> <#ffcf70><killer></#ffcf70> <gray>拔出</gray> <white><weapon></white> <#ff6b35>无情斩杀了</#ff6b35> <#ff8fab><victim></#ff8fab>"
 
-  mvp:
+  nebula:
     display-name: "星河"
-    permission: "dreamkillecho.mvp"
+    permission: "dreamkillecho.nebula"
     priority: 30
-    # 效果: ◆ 星河 PlayerA 凭借 钻石剑 强势终结 PlayerB
-    message: "<gradient:#38bdf8:#8b5cf6><b>◆ 星河</b></gradient> <#7dd3fc><killer></#7dd3fc> <dark_gray>(<#fb7185><killer_health>❤</#fb7185>)</dark_gray> <gray>凭借</gray> <#e0f2fe><weapon></#e0f2fe> <#a78bfa>强势终结</#a78bfa> <#f0abfc><victim></#f0abfc>"
+    # 效果: ◆ 星河 PlayerA 携 钻石剑 陨灭了 PlayerB (❤)
+    message: "<gradient:#38bdf8:#8b5cf6><b>◆ 星河</b></gradient> <#7dd3fc><killer></#7dd3fc> <dark_gray>(<#fb7185><killer_health>❤</#fb7185>)</dark_gray> <gray>携</gray> <#e0f2fe><weapon></#e0f2fe> <#a78bfa>陨灭了</#a78bfa> <#f0abfc><victim></#f0abfc>"
 
-  mvp-plus:
+  frost:
     display-name: "霜雷"
-    permission: "dreamkillecho.mvpplus"
+    permission: "dreamkillecho.frost"
     priority: 40
-    # 效果: ◆ 霜雷 PlayerA 以 钻石剑 粉碎 PlayerB 的防线
-    message: "<gradient:#22d3ee:#2563eb><b>◆ 霜雷</b></gradient> <#67e8f9><killer></#67e8f9> <gray>以</gray> <#e0ffff><weapon></#e0ffff> <#60a5fa>粉碎</#60a5fa> <#f472b6><victim></#f472b6> <dark_gray>的防线</dark_gray>"
+    # 效果: ◆ 霜雷 PlayerA 引 钻石剑 之威，击碎了 PlayerB 的防线
+    message: "<gradient:#22d3ee:#2563eb><b>◆ 霜雷</b></gradient> <#67e8f9><killer></#67e8f9> <gray>引</gray> <#e0ffff><weapon></#e0ffff> <gray>之威，</gray><#60a5fa>击碎了</#60a5fa> <#f472b6><victim></#f472b6> <dark_gray>的防线</dark_gray>"
 
-  svip:
+  judgment:
     display-name: "审判"
-    permission: "dreamkillecho.svip"
+    permission: "dreamkillecho.judgment"
     priority: 50
-    # 效果: ⚔ 审判 PlayerA 召来 钻石剑 审判了 PlayerB
-    message: "<gradient:#ef4444:#f97316:#facc15><b>⚔ 审判</b></gradient> <#fde68a><killer></#fde68a> <gray>召来</gray> <white><weapon></white> <gradient:#fb7185:#ef4444>审判了</gradient> <#fecaca><victim></#fecaca>"
+    # 效果: ⚔ 审判 PlayerA 降下 钻石剑 的神罚，制裁了 PlayerB
+    message: "<gradient:#ef4444:#f97316:#facc15><b>⚔ 审判</b></gradient> <#fde68a><killer></#fde68a> <gray>降下</gray> <white><weapon></white> <gray>的神罚，</gray><gradient:#fb7185:#ef4444>制裁了</gradient> <#fecaca><victim></#fecaca>"
 
   love:
     display-name: "心动"
     permission: "dreamkillecho.love"
     priority: 15
-    # 效果: ❤ PlayerA 用 钻石剑 温柔收下 PlayerB
-    message: "<gradient:#f9a8d4:#ec4899><b>❤ 心动</b></gradient> <#fbcfe8><killer></#fbcfe8> <#fce7f3>用</#fce7f3> <white><weapon></white> <#f472b6>温柔收下</#f472b6> <#fda4af><victim></#fda4af>"
+    # 效果: ❤ 心动 PlayerA 用 钻石剑 俘获了 PlayerB 的心
+    message: "<gradient:#f9a8d4:#ec4899><b>❤ 心动</b></gradient> <#fbcfe8><killer></#fbcfe8> <#fce7f3>用</#fce7f3> <white><weapon></white> <#f472b6>俘获了</#f472b6> <#fda4af><victim></#fda4af> <#fce7f3>的心</#fce7f3>"

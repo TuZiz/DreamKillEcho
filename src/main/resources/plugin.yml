@@ -19,15 +19,15 @@ permissions:
     default: true
   dreamkillecho.default:
     default: true
-  dreamkillecho.vip:
+  dreamkillecho.blaze:
     default: op
-  dreamkillecho.vipplus:
+  dreamkillecho.vanguard:
     default: op
-  dreamkillecho.mvp:
+  dreamkillecho.nebula:
     default: op
-  dreamkillecho.mvpplus:
+  dreamkillecho.frost:
     default: op
-  dreamkillecho.svip:
+  dreamkillecho.judgment:
     default: op
   dreamkillecho.love:
     default: op
