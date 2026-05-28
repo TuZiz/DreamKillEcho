@@ -26,7 +26,8 @@ class WeaponNameService(private val messages: MessageService) {
             val fallback = messages.raw("bare-hand")
             return WeaponDisplay(fallback, Component.text(fallback))
         }
-        val displayName = item.itemMeta?.displayName
+        val meta = item.itemMeta
+        val displayName = if (meta != null && meta.hasDisplayName()) meta.displayName else null
         if (!displayName.isNullOrBlank()) {
             val fallback = ChatColor.stripColor(displayName) ?: displayName
             return WeaponDisplay(fallback, legacySerializer.deserialize(displayName))
