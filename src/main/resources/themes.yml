@@ -52,3 +52,38 @@ themes:
     rarity: "稀有"
     # 效果: ❤ 心动 PlayerA 用 钻石剑 俘获了 PlayerB 的心
     message: "<gradient:#f9a8d4:#ec4899><b>❤ 心动</b></gradient> <#fbcfe8><killer></#fbcfe8> <#fce7f3>用</#fce7f3> <white><weapon></white> <#f472b6>俘获了</#f472b6> <#fda4af><victim></#fda4af> <#fce7f3>的心</#fce7f3>"
+
+  phantom:
+    display-name: "幽影"
+    permission: "dreamkillecho.phantom"
+    rarity: "稀有"
+    # 效果: ☾ 幽影 PlayerA 隐入暗夜，用 钻石剑 刺穿了 PlayerB
+    message: "<gradient:#cbd5e1:#475569><b>☾ 幽影</b></gradient> <#e2e8f0><killer></#e2e8f0> <dark_gray>隐入暗夜，用</dark_gray> <#f1f5f9><weapon></#f1f5f9> <#64748b>刺穿了</#64748b> <#94a3b8><victim></#94a3b8>"
+
+  crimson:
+    display-name: "猩红"
+    permission: "dreamkillecho.crimson"
+    rarity: "稀有"
+    # 效果: ☠ 猩红 PlayerA 祭出 钻石剑 无情绞杀了 PlayerB
+    message: "<gradient:#ef4444:#991b1b><b>☠ 猩红</b></gradient> <#fca5a5><killer></#fca5a5> <gray>祭出</gray> <#ffedd5><weapon></#ffedd5> <#b91c1c>无情绞杀了</#b91c1c> <#f87171><victim></#f87171>"
+
+  abyss:
+    display-name: "深渊"
+    permission: "dreamkillecho.abyss"
+    rarity: "史诗"
+    # 效果: ✦ 深渊 PlayerA 唤醒 钻石剑 吞噬了 PlayerB 的灵魂
+    message: "<gradient:#a855f7:#4c1d95><b>✦ 深渊</b></gradient> <#c084fc><killer></#c084fc> <dark_gray>唤醒</dark_gray> <#d8b4fe><weapon></#d8b4fe> <#7e22ce>吞噬了</#7e22ce> <#9ca3af><victim></#9ca3af> <dark_gray>的灵魂</dark_gray>"
+
+  holy:
+    display-name: "圣光"
+    permission: "dreamkillecho.holy"
+    rarity: "史诗"
+    # 效果: ✧ 圣光 PlayerA 高举 钻石剑 净化了 PlayerB 的罪恶
+    message: "<gradient:#fef08a:#eab308><b>✧ 圣光</b></gradient> <#fef9c3><killer></#fef9c3> <gray>高举</gray> <white><weapon></white> <#fde047>净化了</#fde047> <#fcd34d><victim></#fcd34d> <gray>的罪恶</gray>"
+
+  dragon:
+    display-name: "龙吟"
+    permission: "dreamkillecho.dragon"
+    rarity: "传说"
+    # 效果: ♨ 龙吟 PlayerA 驾驭 钻石剑 带着震天狂怒撕裂了 PlayerB
+    message: "<gradient:#fcd34d:#ea580c:#b91c1c><b>♨ 龙吟</b></gradient> <#fde68a><killer></#fde68a> <gray>驾驭</gray> <#ffedd5><weapon></#ffedd5> <gradient:#ea580c:#ef4444>带着震天狂怒撕裂了</gradient> <#fca5a5><victim></#fca5a5>"

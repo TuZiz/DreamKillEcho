@@ -31,6 +31,16 @@ permissions:
     default: op
   dreamkillecho.love:
     default: op
+  dreamkillecho.phantom:
+    default: op
+  dreamkillecho.crimson:
+    default: op
+  dreamkillecho.abyss:
+    default: op
+  dreamkillecho.holy:
+    default: op
+  dreamkillecho.dragon:
+    default: op
   dreamkillecho.custom.message:
     default: true
   dreamkillecho.custom.color:

@@ -75,6 +75,11 @@ mvn clean package
 - `dreamkillecho.frost`
 - `dreamkillecho.judgment`
 - `dreamkillecho.love`
+- `dreamkillecho.phantom`
+- `dreamkillecho.crimson`
+- `dreamkillecho.abyss`
+- `dreamkillecho.holy`
+- `dreamkillecho.dragon`
 - `dreamkillecho.custom.message`
 - `dreamkillecho.custom.color`
 - `dreamkillecho.custom.minimessage`
@@ -189,7 +194,7 @@ Shade 配置中没有对 `sqlite-jdbc` 和 `mysql-connector-j` 做 relocation：
 - 修改主题后没生效：执行 `/dke reload`。
 - 修改 GUI 后没生效：确认修改的是 `plugins/DreamKillEcho/gui/theme-menu.yml`，并且 `GuiPlain`、`GuiKey`、`templates` 的字符与函数定义正确；如果只是新增主题，一般只需要改 `themes.yml`，然后执行 `/dke reload`。
 - 修改 `storage.type` 后没切换：存储连接池不会热切换，需要重启。
-- 玩家看不到主题：检查 LuckPerms 是否发放对应 `dreamkillecho.<theme>` 权限。默认主题节点为 `dreamkillecho.default`，其余内置主题节点为 `dreamkillecho.blaze`、`dreamkillecho.vanguard`、`dreamkillecho.love`、`dreamkillecho.nebula`、`dreamkillecho.frost`、`dreamkillecho.judgment`。
+- 玩家看不到主题：检查 LuckPerms 是否发放对应 `dreamkillecho.<theme>` 权限。默认主题节点为 `dreamkillecho.default`，其余内置主题节点为 `dreamkillecho.blaze`、`dreamkillecho.vanguard`、`dreamkillecho.love`、`dreamkillecho.phantom`、`dreamkillecho.crimson`、`dreamkillecho.abyss`、`dreamkillecho.nebula`、`dreamkillecho.frost`、`dreamkillecho.holy`、`dreamkillecho.judgment`、`dreamkillecho.dragon`。
 - 自定义击杀语没有显示：确认已开启 `custom-message.use-as-theme-message`，且内容在需要审核时已由管理员 `/dke approve <player>` 批准。
 
 ## Folia 注意事项
