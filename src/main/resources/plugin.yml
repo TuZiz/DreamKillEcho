@@ -31,6 +31,12 @@ permissions:
     default: op
   dreamkillecho.love:
     default: op
+  dreamkillecho.custom.message:
+    default: true
+  dreamkillecho.custom.color:
+    default: op
+  dreamkillecho.custom.minimessage:
+    default: op
   dreamkillecho.effect.title:
     default: op
   dreamkillecho.effect.actionbar:
@@ -50,6 +56,8 @@ permissions:
   dreamkillecho.admin.reload:
     default: op
   dreamkillecho.admin.stats:
+    default: op
+  dreamkillecho.admin.review:
     default: op
   dreamkillecho.admin.resetstats:
     default: op

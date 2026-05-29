@@ -6,7 +6,7 @@ DreamKillEcho 是一个 Kotlin + Maven 编写的 Minecraft 击杀播报 / 死亡
 
 - PlayerDeathEvent 击杀与死亡识别：玩家近战、远程投掷物、生物、环境死亡与 unknown 兜底。
 - 击杀播报主题：通过权限解锁，支持 MiniMessage、十六进制颜色、渐变；未手动选择主题时固定使用 `default`，主题可配置展示用 `rarity` 稀有度。
-- 展示特效：Title、ActionBar、Sound、Particle、Firework、BossBar，带全局限流。
+- 展示特效：Title、ActionBar、Sound、Particle、Firework 模拟粒子、BossBar，带全局限流。
 - 击杀名片：可配置内容，支持仅击杀者、全服、附近玩家。
 - 连杀系统：kills、deaths、current_streak、max_streak、终结连杀、复仇击杀。
 - 防刷屏 / 防刷击杀：同击杀者、同受害者、每分钟广播与特效限流、同受害者反复击杀限制，并对反刷记录做 TTL 清理。
@@ -49,10 +49,18 @@ mvn clean package
 - `/dke theme`
 - `/dke gui`
 - `/dke set <theme>`
-- `/dke stats <player>`
+- `/dke custom set <message...>`
+- `/dke custom preview <message...>`
+- `/dke custom reset`
+- `/dke stats [player]`
 - `/dke top kills`
 - `/dke top streak`
+- `/dke review`
+- `/dke approve <player>`
+- `/dke deny <player>`
 - `/dke resetstats <player>`
+
+普通玩家 `/dke stats` 只能查看自己；查看他人统计、排行榜、重置统计和自定义击杀语审核都需要对应管理权限。
 
 ## 权限
 
@@ -67,6 +75,9 @@ mvn clean package
 - `dreamkillecho.frost`
 - `dreamkillecho.judgment`
 - `dreamkillecho.love`
+- `dreamkillecho.custom.message`
+- `dreamkillecho.custom.color`
+- `dreamkillecho.custom.minimessage`
 - `dreamkillecho.effect.title`
 - `dreamkillecho.effect.actionbar`
 - `dreamkillecho.effect.sound`
@@ -77,6 +88,7 @@ mvn clean package
 - `dreamkillecho.card.svip`
 - `dreamkillecho.admin.reload`
 - `dreamkillecho.admin.stats`
+- `dreamkillecho.admin.review`
 - `dreamkillecho.admin.resetstats`
 - `dreamkillecho.admin.bypass`
 
@@ -87,6 +99,8 @@ mvn clean package
 - `config.yml`：世界限制、广播范围、名片、特效、连杀、防刷、刷新周期。
 - `broadcast.range-mode` / `card.mode`：支持 `global`、`nearby`、`killer` 或名片的 `killer` 模式；Folia 下 `nearby` 不跨区域读取玩家位置，会安全退化为 `global` 接收范围。
 - `effects.bossbar.seconds`：BossBar 展示秒数，最小值为 1，默认 5。
+- `effects.firework`：默认关闭；启用后只模拟烟花粒子和声音，不生成真实烟花火箭实体，不造成伤害。
+- `custom-message.*`：自定义击杀语长度、冷却、审核、屏蔽词和 MiniMessage 标签安全策略。普通玩家需要 `dreamkillecho.custom.message` 才能设置，颜色类标签需要 `dreamkillecho.custom.color`，完整安全子集需要 `dreamkillecho.custom.minimessage`。
 - `anti-farm.same-victim-record-ttl-seconds`：同一击杀者/受害者反刷记录保留时间，默认 600 秒，惰性清理以避免长期运行内存增长。
 - `anti-farm.revenge-window-seconds`：复仇判定窗口，默认 600 秒，超过窗口的反向击杀不再触发复仇播报。
 - `storage.flush-interval-seconds`：定时 flush 间隔，默认 120 秒。
@@ -155,7 +169,7 @@ mysql:
   password: "password"
 ```
 
-数据库不可用时插件进入降级模式，只使用内存缓存运行，控制台会输出警告。后续玩家加载、查询和定时 flush 会继续尝试重连；dirty profile / stats 不会因为一次 flush 失败被清除，数据库恢复后会尽量写回。
+数据库不可用时插件进入降级模式，只使用内存缓存运行，控制台会输出警告。后续玩家加载、查询和定时 flush 会继续尝试重连；dirty profile / stats 不会因为一次 flush 失败被清除。玩家刚进服未完成 stats 加载时，击杀统计会先异步加载旧数据再应用增量，避免用 0 基线覆盖旧统计。
 
 MySQL 连接 URL 默认使用 `characterEncoding=utf8mb4`，用于正常保存中文和 emoji 文本。
 
@@ -176,6 +190,7 @@ Shade 配置中没有对 `sqlite-jdbc` 和 `mysql-connector-j` 做 relocation：
 - 修改 GUI 后没生效：确认修改的是 `plugins/DreamKillEcho/gui/theme-menu.yml`，并且 `GuiPlain`、`GuiKey`、`templates` 的字符与函数定义正确；如果只是新增主题，一般只需要改 `themes.yml`，然后执行 `/dke reload`。
 - 修改 `storage.type` 后没切换：存储连接池不会热切换，需要重启。
 - 玩家看不到主题：检查 LuckPerms 是否发放对应 `dreamkillecho.<theme>` 权限。默认主题节点为 `dreamkillecho.default`，其余内置主题节点为 `dreamkillecho.blaze`、`dreamkillecho.vanguard`、`dreamkillecho.love`、`dreamkillecho.nebula`、`dreamkillecho.frost`、`dreamkillecho.judgment`。
+- 自定义击杀语没有显示：确认已开启 `custom-message.use-as-theme-message`，且内容在需要审核时已由管理员 `/dke approve <player>` 批准。
 
 ## Folia 注意事项
 

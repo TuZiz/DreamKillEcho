@@ -8,6 +8,7 @@ object Permissions {
     const val CUSTOM_MINIMESSAGE = "dreamkillecho.custom.minimessage"
     const val ADMIN_RELOAD = "dreamkillecho.admin.reload"
     const val ADMIN_STATS = "dreamkillecho.admin.stats"
+    const val ADMIN_REVIEW = "dreamkillecho.admin.review"
     const val ADMIN_RESET_STATS = "dreamkillecho.admin.resetstats"
     const val ADMIN_BYPASS = "dreamkillecho.admin.bypass"
     const val EFFECT_TITLE = "dreamkillecho.effect.title"

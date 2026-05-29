@@ -2,6 +2,7 @@ package ym.dreamkillecho.config
 
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.plugin.java.JavaPlugin
+import ym.dreamkillecho.gui.ThemeMenuConfig
 import java.io.File
 
 class ConfigService private constructor(
@@ -9,6 +10,7 @@ class ConfigService private constructor(
     val language: YamlConfiguration,
     val fallbackLanguage: YamlConfiguration,
     val themes: YamlConfiguration,
+    val themeMenu: ThemeMenuConfig,
     val storage: StorageSettings
 ) {
     companion object {
@@ -18,8 +20,9 @@ class ConfigService private constructor(
             val language = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "lang/${languageSettings.defaultLanguage}.yml"))
             val fallbackLanguage = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "lang/${languageSettings.fallbackLanguage}.yml"))
             val themes = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "themes.yml"))
+            val themeMenu = ThemeMenuConfig.load(plugin)
             val storageYaml = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "storage.yml"))
-            return ConfigService(parseSettings(config), language, fallbackLanguage, themes, parseStorage(storageYaml))
+            return ConfigService(parseSettings(config), language, fallbackLanguage, themes, themeMenu, parseStorage(storageYaml))
         }
 
         private fun parseLanguage(yaml: YamlConfiguration): LanguageSettings {

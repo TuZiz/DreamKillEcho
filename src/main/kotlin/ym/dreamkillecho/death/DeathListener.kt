@@ -80,42 +80,62 @@ class DeathListener(private val plugin: DreamKillEcho) : Listener {
             killTheme.rarity,
             killTheme.id
         )
-        if (allowStats) {
-            val update = services.storage.recordDeath(context.victimUuid, context.killerUuid, process.countStats)
-            previousVictimStreak = update.previousVictimStreak
-            if (killer != null && process.countStats) {
-                services.deathAnalyzer.fillPlaceholders(
-                    context,
-                    update.killerStreak,
-                    update.killerMaxStreak,
-                    services.messages.prefix,
-                    killTheme.displayName,
-                    services.config.settings.serverName,
-                    killTheme.rarity,
-                    killTheme.id
-                )
-            } else {
-                services.deathAnalyzer.fillPlaceholders(
-                    context,
-                    0,
-                    update.victimMaxStreak,
-                    services.messages.prefix,
-                    killTheme.displayName,
-                    services.config.settings.serverName,
-                    killTheme.rarity,
-                    killTheme.id
-                )
-            }
+        if (!allowStats) {
+            finishDeath(context, previousVictimStreak, process.revenge, allowBroadcast, process.shouldBroadcast, allowEffects, process.shouldEffect, false)
+            return
         }
-        if (allowBroadcast && process.shouldBroadcast) {
+        services.storage.recordDeathAsync(context.victimUuid, context.killerUuid, process.countStats).thenAccept { update ->
+            val task: () -> Unit = task@{
+                val active = plugin.services ?: return@task
+                if (killer != null && process.countStats) {
+                    active.deathAnalyzer.fillPlaceholders(
+                        context,
+                        update.killerStreak,
+                        update.killerMaxStreak,
+                        active.messages.prefix,
+                        killTheme.displayName,
+                        active.config.settings.serverName,
+                        killTheme.rarity,
+                        killTheme.id
+                    )
+                } else {
+                    active.deathAnalyzer.fillPlaceholders(
+                        context,
+                        0,
+                        update.victimMaxStreak,
+                        active.messages.prefix,
+                        killTheme.displayName,
+                        active.config.settings.serverName,
+                        killTheme.rarity,
+                        killTheme.id
+                    )
+                }
+                finishDeath(context, update.previousVictimStreak, process.revenge, allowBroadcast, process.shouldBroadcast, allowEffects, process.shouldEffect, true)
+            }
+            if (killer != null) services.scheduler.runEntity(killer, task) else services.scheduler.runMain(task)
+        }
+    }
+
+    private fun finishDeath(
+        context: DeathContext,
+        previousVictimStreak: Int,
+        revenge: Boolean,
+        allowBroadcast: Boolean,
+        shouldBroadcast: Boolean,
+        allowEffects: Boolean,
+        shouldEffect: Boolean,
+        logKill: Boolean
+    ) {
+        val services = plugin.services ?: return
+        if (allowBroadcast && shouldBroadcast) {
             services.broadcast.broadcast(context)
             services.broadcast.sendCard(context)
-            services.broadcast.sendStreak(context, previousVictimStreak, process.revenge)
+            services.broadcast.sendStreak(context, previousVictimStreak, revenge)
         }
-        if (allowEffects && process.shouldEffect) {
+        if (allowEffects && shouldEffect) {
             services.effects.play(context)
         }
-        if (allowStats) {
+        if (logKill) {
             services.storage.logKill(KillLog(context.killerUuid, context.victimUuid, context.weapon, context.world, context.deathCause, context.distance))
         }
     }

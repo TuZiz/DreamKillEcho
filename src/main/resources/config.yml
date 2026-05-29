@@ -68,6 +68,7 @@ effects:
     name: "FIREWORK"
     count: 16
     max-count: 32
+  # firework 为纯展示模拟效果，只播放粒子和声音，不生成真实 FIREWORK_ROCKET 实体。
   firework:
     enabled: false
     max-per-kill: 1

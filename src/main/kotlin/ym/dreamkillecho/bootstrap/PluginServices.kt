@@ -59,7 +59,7 @@ class PluginServices(
             storage: StorageService
         ): PluginServices {
             val themes = ThemeService(plugin, config.themes)
-            val themeMenu = ThemeMenuService(plugin, scheduler, messages, themes, storage)
+            val themeMenu = ThemeMenuService(plugin, scheduler, messages, themes, storage, config.themeMenu)
             val analyzer = DeathAnalyzer(messages, WeaponNameService(messages), scheduler.platformName)
             val antiAbuse = AntiAbuseService(config.settings)
             if (scheduler.platformName.contains("Folia", ignoreCase = true) && config.settings.antiFarm.sameIpNoStats) {

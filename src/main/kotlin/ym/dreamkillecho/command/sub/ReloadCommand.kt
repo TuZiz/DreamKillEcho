@@ -24,22 +24,22 @@ class ReloadCommand : SubCommand {
                     context.plugin.logger.warning("[DreamKillEcho] storage.type changed in reload; active connection keeps old type until restart.")
                 }
                 if (!context.plugin.isEnabled) return@runAsync
-                val newMessages = MessageService(context.plugin, loaded.language, loaded.fallbackLanguage)
-                val rebuilt = ym.dreamkillecho.bootstrap.PluginServices.create(context.plugin, old.scheduler, loaded, newMessages, old.storage)
                 old.scheduler.runMain {
+                    var rebuilt: ym.dreamkillecho.bootstrap.PluginServices? = null
                     try {
                         if (!context.plugin.isEnabled) {
-                            rebuilt.shutdown(closeStorage = false)
                             return@runMain
                         }
-                        rebuilt.startTimers()
+                        val newMessages = MessageService(context.plugin, loaded.language, loaded.fallbackLanguage)
+                        rebuilt = ym.dreamkillecho.bootstrap.PluginServices.create(context.plugin, old.scheduler, loaded, newMessages, old.storage)
+                        rebuilt!!.startTimers()
                         context.plugin.replaceServices(rebuilt)
                         context.plugin.commandRouter?.bind(rebuilt)
-                        sendSafely(sender, rebuilt, "reload-success")
+                        sendSafely(sender, rebuilt!!, "reload-success")
                         runCatching { old.shutdown(closeStorage = false) }
                             .onFailure { context.plugin.logger.warning("[DreamKillEcho] Failed to close previous reload services: ${it.message}") }
                     } catch (ex: Exception) {
-                        rebuilt.shutdown(closeStorage = false)
+                        rebuilt?.shutdown(closeStorage = false)
                         sendSafely(sender, old, "reload-failed", mapOf("reason" to (ex.message ?: "unknown")))
                         context.plugin.logger.severe("[DreamKillEcho] Reload failed: ${ex.message}")
                         ex.printStackTrace()

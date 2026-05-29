@@ -21,9 +21,9 @@ class ThemeMenuService(
     private val scheduler: SchedulerAdapter,
     private val messages: MessageService,
     private val themes: ThemeService,
-    private val storage: StorageService
+    private val storage: StorageService,
+    private val config: ThemeMenuConfig
 ) {
-    private val config: ThemeMenuConfig = ThemeMenuConfig.load(plugin)
     private val legacy = LegacyComponentSerializer.legacySection()
 
     fun open(player: Player, page: Int = 0) {

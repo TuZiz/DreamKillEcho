@@ -24,9 +24,12 @@ class StatsCommand : SubCommand {
     }
 
     private fun stats(sender: CommandSender, target: String?, context: CommandContext): Boolean {
-        if (!sender.hasPermission(Permissions.ADMIN_STATS) && sender !is Player) return CommandUtil.deny(sender, context.services)
         val self = sender as? Player
-        if (target == null && self == null) return context.services.messages.send(sender, "player-only").let { true }
+        if (self == null && target == null) return context.services.messages.send(sender, "player-only").let { true }
+        if (self == null && !sender.hasPermission(Permissions.ADMIN_STATS)) return CommandUtil.deny(sender, context.services)
+        if (self != null && target != null && !target.equals(self.name, true) && target != self.uniqueId.toString() && !sender.hasPermission(Permissions.ADMIN_STATS)) {
+            return CommandUtil.deny(sender, context.services)
+        }
         val lookup = target ?: self!!.uniqueId.toString()
         context.services.storage.findProfileAsync(lookup).thenCompose { profile ->
             if (profile == null) {
@@ -50,7 +53,7 @@ class StatsCommand : SubCommand {
 
     private fun top(sender: CommandSender, type: String?, context: CommandContext): Boolean {
         if (!sender.hasPermission(Permissions.ADMIN_STATS)) return CommandUtil.deny(sender, context.services)
-        context.services.storage.topStats(type ?: "kills", 10).thenAccept { rows ->
+        context.services.storage.topStats(type ?: "kills", 10.coerceIn(1, 100)).thenAccept { rows ->
             val sendTask = {
                 rows.forEachIndexed { index, row ->
                     val value = if (type.equals("streak", true)) row.maxStreak else row.kills

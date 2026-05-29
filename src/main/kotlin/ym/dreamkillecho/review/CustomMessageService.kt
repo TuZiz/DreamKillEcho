@@ -18,6 +18,11 @@ data class CustomMessageSetResult(
     val cooldownSeconds: Long = 0L
 )
 
+data class CustomMessagePreviewResult(
+    val result: CustomMessageResult,
+    val message: String? = null
+)
+
 class CustomMessageService(
     private val settings: CustomMessageSettings,
     private val storage: StorageService
@@ -48,6 +53,15 @@ class CustomMessageService(
             profile.customMessageStatus = CustomMessageStatus.NONE
             profile.customMessageUpdatedAt = System.currentTimeMillis()
         }
+    }
+
+    fun preview(player: Player, message: String): CustomMessagePreviewResult {
+        if (message.length > settings.maxLength) return CustomMessagePreviewResult(CustomMessageResult.TOO_LONG)
+        if (settings.blockedWords.any { it.isNotBlank() && message.contains(it, ignoreCase = true) }) {
+            return CustomMessagePreviewResult(CustomMessageResult.BLOCKED_WORD)
+        }
+        val sanitized = sanitizeByPermission(player, message) ?: return CustomMessagePreviewResult(CustomMessageResult.INVALID_TAG)
+        return CustomMessagePreviewResult(CustomMessageResult.SAVED, sanitized)
     }
 
     fun pending(): List<PlayerProfile> {

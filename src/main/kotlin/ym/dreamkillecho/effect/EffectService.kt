@@ -1,14 +1,8 @@
 package ym.dreamkillecho.effect
 
-import org.bukkit.Color
-import org.bukkit.FireworkEffect
 import org.bukkit.Location
 import org.bukkit.Particle
 import org.bukkit.Sound
-import org.bukkit.entity.EntityType
-import org.bukkit.entity.Firework
-import org.bukkit.entity.Player
-import org.bukkit.inventory.meta.FireworkMeta
 import ym.dreamkillecho.config.PluginSettings
 import ym.dreamkillecho.death.DeathContext
 import ym.dreamkillecho.message.MessageService
@@ -50,8 +44,8 @@ class EffectService(
             }
             if (settings.effects.firework.enabled && killer.hasPermission(Permissions.EFFECT_FIREWORK)) {
                 val location = killer.location.clone()
-                repeat(settings.effects.firework.maxPerKill.coerceIn(0, 2)) {
-                    scheduler.runLocation(location) { spawnFirework(location) }
+                repeat(settings.effects.firework.maxPerKill.coerceIn(0, 2)) { index ->
+                    scheduler.runLocation(location) { spawnFireworkBurst(location, index) }
                 }
             }
             if (settings.effects.bossbar.enabled && killer.hasPermission(Permissions.EFFECT_BOSSBAR)) {
@@ -63,11 +57,11 @@ class EffectService(
         }
     }
 
-    private fun spawnFirework(location: Location) {
-        val firework = location.world?.spawnEntity(location, EntityType.FIREWORK_ROCKET) as? Firework ?: return
-        val meta: FireworkMeta = firework.fireworkMeta
-        meta.power = 0
-        meta.addEffect(FireworkEffect.builder().withColor(Color.AQUA, Color.YELLOW).with(FireworkEffect.Type.BALL).trail(false).flicker(true).build())
-        firework.fireworkMeta = meta
+    private fun spawnFireworkBurst(location: Location, index: Int) {
+        val world = location.world ?: return
+        val burst = location.clone().add(0.0, 1.2 + (index * 0.35), 0.0)
+        world.spawnParticle(Particle.FIREWORK, burst, 24, 0.45, 0.35, 0.45, 0.02)
+        world.spawnParticle(Particle.END_ROD, burst, 10, 0.25, 0.25, 0.25, 0.01)
+        world.playSound(burst, Sound.ENTITY_FIREWORK_ROCKET_BLAST, 0.6f, 1.2f)
     }
 }

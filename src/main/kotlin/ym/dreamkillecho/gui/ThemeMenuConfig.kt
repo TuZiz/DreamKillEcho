@@ -40,7 +40,7 @@ data class ThemeMenuConfig(
             }
             return ThemeMenuConfig(
                 title = yaml.getString("Title") ?: yaml.getString("title")
-                    ?: "&#8EC5FF&l击杀播报主题仓库 &#94A3B8| &#F8FAFC<unlocked>/<total>",
+                    ?: "&#8EC5FF&lKill Echo Themes &#94A3B8| &#F8FAFC<unlocked>/<total>",
                 size = shape.size * 9,
                 pageSlots = layout.pageSlots,
                 staticSlots = layout.staticSlots,
