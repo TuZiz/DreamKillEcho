@@ -3,8 +3,9 @@ Title: "<gradient:#A18CD1:#FBC2EB><bold>击杀播报商店</bold></gradient>"
 Shape:
   - "BBBBBBBBB"
   - "B`烈焰播报`B`破军播报`B`心动播报`B"
-  - "B`星河播报`B`霜雷播报`B`审判播报`B"
-  - "BBBB`打开仓库`BBBB"
+  - "B`幽影播报`B`猩红播报`B`深渊播报`B"
+  - "B`星河播报`B`霜雷播报`B`圣光播报`B"
+  - "B`审判播报`B`龙吟播报`B`打开仓库`B"
   - "BBBBBBBBB"
   - "BB`返回点券商店`B`返回主菜单`BB"
 
@@ -149,6 +150,138 @@ buttons:
           - "delay: 1"
           - "player: dke set love"
 
+  "幽影播报":
+    material: PHANTOM_MEMBRANE
+    glow: true
+    name: "<gradient:#cbd5e1:#475569><bold>☾ 幽影播报主题 ☾</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>主题 ID:</#E0E0E0> <#e2e8f0>phantom</#e2e8f0>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>主题稀有度:</#E0E0E0> <#94a3b8>稀有</#94a3b8>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁后可在 /dke theme 中切换</#E0E0E0>"
+      - ""
+      - " <#38F9D7>播报示例:</#38F9D7>"
+      - " <gradient:#cbd5e1:#475569><bold>☾ 幽影</bold></gradient> <#e2e8f0>PlayerA</#e2e8f0> <dark_gray>隐入暗夜，用</dark_gray> <#f1f5f9>钻石剑</#f1f5f9> <#64748b>刺穿了</#64748b> <#94a3b8>PlayerB</#94a3b8>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>280 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#94a3b8>➭</#94a3b8> <#e2e8f0>左键点击购买</#e2e8f0>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *280"
+        actions:
+          - "take-point: 280"
+          - "console: lp user %player_name% permission set dreamkillecho.phantom true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &7&l幽影播报已解锁||&7使用 /dke theme 切换"
+          - "tell: &8[&d播报商店&8] &a你已解锁 &7幽影&a 播报主题。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e280 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.phantom"
+        material: PHANTOM_MEMBRANE
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>☾ 幽影播报 | 已解锁 ☾</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有幽影播报主题</#38F9D7>"
+          - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>点击切换到 phantom</#E0E0E0>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke set phantom"
+
+  "猩红播报":
+    material: REDSTONE
+    glow: true
+    name: "<gradient:#ef4444:#991b1b><bold>☠ 猩红播报主题 ☠</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>主题 ID:</#E0E0E0> <#fca5a5>crimson</#fca5a5>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>主题稀有度:</#E0E0E0> <#ef4444>稀有</#ef4444>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁后可在 /dke theme 中切换</#E0E0E0>"
+      - ""
+      - " <#38F9D7>播报示例:</#38F9D7>"
+      - " <gradient:#ef4444:#991b1b><bold>☠ 猩红</bold></gradient> <#fca5a5>PlayerA</#fca5a5> <gray>祭出</gray> <#ffedd5>钻石剑</#ffedd5> <#b91c1c>无情绞杀了</#b91c1c> <#f87171>PlayerB</#f87171>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>280 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#b91c1c>➭</#b91c1c> <#fca5a5>左键点击购买</#fca5a5>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *280"
+        actions:
+          - "take-point: 280"
+          - "console: lp user %player_name% permission set dreamkillecho.crimson true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &c&l猩红播报已解锁||&7使用 /dke theme 切换"
+          - "tell: &8[&d播报商店&8] &a你已解锁 &c猩红&a 播报主题。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e280 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.crimson"
+        material: REDSTONE
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>☠ 猩红播报 | 已解锁 ☠</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有猩红播报主题</#38F9D7>"
+          - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>点击切换到 crimson</#E0E0E0>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke set crimson"
+
+  "深渊播报":
+    material: ECHO_SHARD
+    glow: true
+    name: "<gradient:#a855f7:#4c1d95><bold>✦ 深渊播报主题 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>主题 ID:</#E0E0E0> <#c084fc>abyss</#c084fc>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>主题稀有度:</#E0E0E0> <#a855f7>史诗</#a855f7>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁后可在 /dke theme 中切换</#E0E0E0>"
+      - ""
+      - " <#38F9D7>播报示例:</#38F9D7>"
+      - " <gradient:#a855f7:#4c1d95><bold>✦ 深渊</bold></gradient> <#c084fc>PlayerA</#c084fc> <dark_gray>唤醒</dark_gray> <#d8b4fe>钻石剑</#d8b4fe> <#7e22ce>吞噬了</#7e22ce> <#9ca3af>PlayerB</#9ca3af> <dark_gray>的灵魂</dark_gray>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>328 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#7e22ce>➭</#7e22ce> <#c084fc>左键点击购买</#c084fc>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *328"
+        actions:
+          - "take-point: 328"
+          - "console: lp user %player_name% permission set dreamkillecho.abyss true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &5&l深渊播报已解锁||&7使用 /dke theme 切换"
+          - "tell: &8[&d播报商店&8] &a你已解锁 &5深渊&a 播报主题。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e328 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.abyss"
+        material: ECHO_SHARD
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>✦ 深渊播报 | 已解锁 ✦</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有深渊播报主题</#38F9D7>"
+          - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>点击切换到 abyss</#E0E0E0>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke set abyss"
+
   "星河播报":
     material: AMETHYST_SHARD
     glow: true
@@ -237,6 +370,50 @@ buttons:
           - "delay: 1"
           - "player: dke set frost"
 
+  "圣光播报":
+    material: GLOWSTONE_DUST
+    glow: true
+    name: "<gradient:#fef08a:#eab308><bold>✧ 圣光播报主题 ✧</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>主题 ID:</#E0E0E0> <#fef9c3>holy</#fef9c3>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>主题稀有度:</#E0E0E0> <#fde047>史诗</#fde047>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁后可在 /dke theme 中切换</#E0E0E0>"
+      - ""
+      - " <#38F9D7>播报示例:</#38F9D7>"
+      - " <gradient:#fef08a:#eab308><bold>✧ 圣光</bold></gradient> <#fef9c3>PlayerA</#fef9c3> <gray>高举</gray> <white>钻石剑</white> <#fde047>净化了</#fde047> <#fcd34d>PlayerB</#fcd34d> <gray>的罪恶</gray>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>328 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#eab308>➭</#eab308> <#fef08a>左键点击购买</#fef08a>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *328"
+        actions:
+          - "take-point: 328"
+          - "console: lp user %player_name% permission set dreamkillecho.holy true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &e&l圣光播报已解锁||&7使用 /dke theme 切换"
+          - "tell: &8[&d播报商店&8] &a你已解锁 &e圣光&a 播报主题。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e328 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.holy"
+        material: GLOWSTONE_DUST
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>✧ 圣光播报 | 已解锁 ✧</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有圣光播报主题</#38F9D7>"
+          - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>点击切换到 holy</#E0E0E0>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke set holy"
+
   "审判播报":
     material: NETHER_STAR
     glow: true
@@ -280,6 +457,50 @@ buttons:
           - "close"
           - "delay: 1"
           - "player: dke set judgment"
+
+  "龙吟播报":
+    material: DRAGON_BREATH
+    glow: true
+    name: "<gradient:#fcd34d:#ea580c:#b91c1c><bold>♨ 龙吟播报主题 ♨</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>主题 ID:</#E0E0E0> <#fde68a>dragon</#fde68a>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>主题稀有度:</#E0E0E0> <#ea580c>传说</#ea580c>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁后可在 /dke theme 中切换</#E0E0E0>"
+      - ""
+      - " <#38F9D7>播报示例:</#38F9D7>"
+      - " <gradient:#fcd34d:#ea580c:#b91c1c><bold>♨ 龙吟</bold></gradient> <#fde68a>PlayerA</#fde68a> <gray>驾驭</gray> <#ffedd5>钻石剑</#ffedd5> <gradient:#ea580c:#ef4444>带着震天狂怒撕裂了</gradient> <#fca5a5>PlayerB</#fca5a5>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>388 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#ea580c>➭</#ea580c> <#fcd34d>左键点击购买</#fcd34d>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *388"
+        actions:
+          - "take-point: 388"
+          - "console: lp user %player_name% permission set dreamkillecho.dragon true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &6&l龙吟播报已解锁||&7使用 /dke theme 切换"
+          - "tell: &8[&d播报商店&8] &a你已解锁 &6龙吟&a 播报主题。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e388 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.dragon"
+        material: DRAGON_BREATH
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>♨ 龙吟播报 | 已解锁 ♨</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有龙吟播报主题</#38F9D7>"
+          - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>点击切换到 dragon</#E0E0E0>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke set dragon"
 
   "打开仓库":
     material: COMPASS
