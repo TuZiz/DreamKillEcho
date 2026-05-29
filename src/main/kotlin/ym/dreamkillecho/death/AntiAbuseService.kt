@@ -30,7 +30,7 @@ class AntiAbuseService(settings: PluginSettings) {
         val killerUuid = context.killerUuid
         if (killerUuid == null) {
             return KillProcessResult(
-                countStats = false,
+                countStats = trackStats,
                 shouldBroadcast = trackBroadcast && broadcastLimiter.tryAcquire(),
                 shouldEffect = false,
                 shutdownStreak = 0,

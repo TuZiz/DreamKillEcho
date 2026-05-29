@@ -299,19 +299,15 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     }
 
     private fun flushDirty() {
-        val profileCopies = synchronized(profileLock) {
-            dirtyProfiles.toList().mapNotNull { uuid ->
-                if (uuid !in loadedProfiles) null else profiles[uuid]?.copy()
-            }
-        }
-        val statCopies = synchronized(statsLock) {
-            dirtyStats.toList().mapNotNull { uuid -> stats[uuid]?.copy() }
-        }
-        if (profileCopies.isEmpty() && statCopies.isEmpty()) return
+        val profileIds = synchronized(profileLock) { dirtyProfiles.toList() }
+        val statIds = synchronized(statsLock) { dirtyStats.toList() }
+        if (profileIds.isEmpty() && statIds.isEmpty()) return
         val connection = openConnectionOrNull() ?: return
         connection.use {
             it.autoCommit = false
             try {
+                val profileCopies = profileIds.mapNotNull { uuid -> profileForFlush(it, uuid) }
+                val statCopies = statIds.mapNotNull { uuid -> statForFlush(it, uuid) }
                 for (copy in profileCopies) playerRepository.save(it, copy)
                 for (copy in statCopies) statsRepository.save(it, copy)
                 it.commit()
@@ -417,7 +413,12 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     private fun ensureStatsLoaded(uuid: UUID): Boolean {
         if (uuid in loadedStats) return true
         val loaded = openConnectionOrNull()?.use { connection -> loadOrCreateStats(connection, uuid) }
-            ?: return false
+            ?: run {
+                synchronized(statsLock) {
+                    stats.computeIfAbsent(uuid) { PlayerStats(uuid) }
+                }
+                return true
+            }
         mergeStats(uuid, loaded)
         loadedStats += uuid
         return true
@@ -508,11 +509,63 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
         }
     }
 
+    private fun profileForFlush(connection: Connection, uuid: UUID): PlayerProfile? {
+        val cached = synchronized(profileLock) { profiles[uuid]?.copy() } ?: return null
+        if (uuid in loadedProfiles) return cached
+        val loaded = playerRepository.load(connection, uuid)
+        val merged = loaded?.copy() ?: cached
+        synchronized(profileLock) {
+            val current = profiles[uuid] ?: cached
+            if (loaded != null) {
+                pendingProfileUpdates.remove(uuid).orEmpty().forEach { it(merged) }
+                if (current.name.isNotBlank() && current.name != uuid.toString()) {
+                    merged.name = current.name
+                }
+                merged.updatedAt = current.updatedAt.coerceAtLeast(System.currentTimeMillis())
+            } else {
+                pendingProfileUpdates.remove(uuid)
+            }
+            profiles[uuid] = merged
+            loadedProfiles += uuid
+            return merged.copy()
+        }
+    }
+
     private fun mergeStats(uuid: UUID, loaded: PlayerStats) {
         synchronized(statsLock) {
             val current = stats[uuid]
             if (uuid in dirtyStats || (uuid in loadedStats && current != null && current.updatedAt >= loaded.updatedAt)) return
             stats[uuid] = loaded
         }
+    }
+
+    private fun statForFlush(connection: Connection, uuid: UUID): PlayerStats? {
+        val cached = synchronized(statsLock) { stats[uuid]?.copy() } ?: return null
+        if (uuid in loadedStats) return cached
+        val loaded = statsRepository.load(connection, uuid)
+        val merged = if (loaded != null) mergeUnloadedStats(loaded, cached) else cached
+        synchronized(statsLock) {
+            stats[uuid] = merged
+            loadedStats += uuid
+            return merged.copy()
+        }
+    }
+
+    private fun mergeUnloadedStats(loaded: PlayerStats, cached: PlayerStats): PlayerStats {
+        val merged = loaded.copy()
+        merged.kills += cached.kills
+        merged.deaths += cached.deaths
+        merged.currentStreak = if (cached.deaths > 0) {
+            cached.currentStreak
+        } else {
+            merged.currentStreak + cached.currentStreak
+        }
+        merged.maxStreak = maxOf(merged.maxStreak, merged.currentStreak, cached.maxStreak)
+        if (cached.lastKillTime > 0L) {
+            merged.lastVictimUuid = cached.lastVictimUuid
+            merged.lastKillTime = cached.lastKillTime
+        }
+        merged.updatedAt = maxOf(merged.updatedAt, cached.updatedAt)
+        return merged
     }
 }
