@@ -230,8 +230,8 @@ class ThemeMenuService(
             "display" to messages.component(theme.displayName, player, itemPlaceholders),
             "theme_display" to messages.component(theme.displayName, player, itemPlaceholders),
             "theme_name" to messages.component(theme.displayName, player, itemPlaceholders),
-            "status" to messages.component(status, player, itemPlaceholders),
-            "theme_status" to messages.component(status, player, itemPlaceholders),
+            "status" to guiComponent(status, player, itemPlaceholders),
+            "theme_status" to guiComponent(status, player, itemPlaceholders),
             "current" to messages.component(currentTheme.displayName, player, itemPlaceholders),
             "current_theme" to messages.component(currentTheme.displayName, player, itemPlaceholders),
             "theme_preview" to messages.component(theme.message, player, themePreviewPlaceholders(player, theme))
@@ -276,6 +276,16 @@ class ThemeMenuService(
     ): String {
         val normalized = normalizeGuiText(template, placeholders.keys + componentPlaceholders.keys)
         return legacy.serialize(messages.component(normalized, player, placeholders, componentPlaceholders))
+    }
+
+    private fun guiComponent(
+        template: String,
+        player: Player,
+        placeholders: Map<String, String>,
+        componentPlaceholders: Map<String, Component> = emptyMap()
+    ): Component {
+        val normalized = normalizeGuiText(template, placeholders.keys + componentPlaceholders.keys)
+        return messages.component(normalized, player, placeholders, componentPlaceholders)
     }
 
     private fun normalizeGuiText(template: String, placeholderNames: Set<String>): String {

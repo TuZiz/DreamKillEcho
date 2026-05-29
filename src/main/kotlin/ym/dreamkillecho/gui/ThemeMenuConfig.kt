@@ -109,13 +109,29 @@ data class ThemeMenuConfig(
             val result = linkedMapOf<String, ThemeMenuItemConfig>()
             for (key in section.getKeys(false)) {
                 val templateSection = section.getConfigurationSection(key) ?: continue
-                result[key.lowercase()] = readItem(
-                    templateSection,
-                    templateSection.getString("material", "PAPER") ?: "PAPER",
-                    templateSection.getString("name", key) ?: key
+                val normalizedKey = key.lowercase()
+                result[normalizedKey] = sanitizeThemeItem(
+                    normalizedKey,
+                    readItem(
+                        templateSection,
+                        templateSection.getString("material", "PAPER") ?: "PAPER",
+                        templateSection.getString("name", key) ?: key
+                    )
                 )
             }
             return result
+        }
+
+        private fun sanitizeThemeItem(key: String, item: ThemeMenuItemConfig): ThemeMenuItemConfig {
+            if (key !in setOf("theme-available", "theme-selected", "theme-locked", "available", "selected", "locked")) {
+                return item
+            }
+            val publicLore = item.lore.filterNot { line ->
+                line.contains("%theme_id%", ignoreCase = true) ||
+                    line.contains("%theme_permission%", ignoreCase = true) ||
+                    line.contains("%permission%", ignoreCase = true)
+            }
+            return item.copy(lore = publicLore)
         }
 
         private fun readLayout(plugin: JavaPlugin, shape: List<String>, keys: Map<Char, ThemeMenuGuiKey>): ThemeMenuLayout {

@@ -112,7 +112,7 @@ mvn clean package
 - `storage.shutdown-timeout-seconds`：插件关闭时等待最终 dirty 数据写回的最长秒数，默认 5 秒。
 - `lang/zh_cn.yml` / `lang/en_us.yml`：所有可见消息。`config.yml` 中的 `language.default` 优先读取，缺失 key 时回退 `language.fallback`；服务器已有旧语言文件缺少新版 key 时，会在内存中补齐 jar 内默认值，不覆盖你的自定义文件。
 - `themes.yml`：击杀主题、展示名、权限、展示用稀有度 `rarity`、MiniMessage 模板。玩家未手动选择主题时固定使用 `default`，不会按权限自动选择更高稀有度主题。
-- `gui/theme-menu.yml`：主题仓库 GUI 的标题、`GuiPlain` 布局、`GuiKey` 物品样式、`templates` 主题物品模板。`@` 会自动承载 `themes.yml` 中的主题列表，新增主题通常不需要再改这个文件；修改后执行 `/dke reload` 生效。
+- `gui/theme-menu.yml`：主题仓库 GUI 的标题、`GuiPlain` 布局、`GuiKey` 物品样式、`templates` 主题物品模板。默认主题 lore 只展示稀有度、状态和播报示例，不展示内部主题 ID 或权限节点；旧配置里残留的主题 ID / 权限 lore 行会在加载时隐藏；`@` 会自动承载 `themes.yml` 中的主题列表，新增主题通常不需要再改这个文件；修改后执行 `/dke reload` 生效。
 - `storage.yml`：SQLite / MySQL 连接配置。
 
 ## 主题占位符

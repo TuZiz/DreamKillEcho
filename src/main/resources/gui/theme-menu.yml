@@ -68,9 +68,9 @@ GuiKey:
 CloseOnSelect: true
 
 Status:
-  Selected: "&#FDE047&l[当前使用]"
-  Available: "&#A7F3D0&l[已解锁]"
-  Locked: "&#F87171&l[未解锁]"
+  Selected: "<#FDE047><bold>[当前使用]</bold>"
+  Available: "<#A7F3D0><bold>[已解锁]</bold>"
+  Locked: "<#F87171><bold>[未解锁]</bold>"
 
 templates:
   theme-available:
@@ -78,8 +78,6 @@ templates:
     name: "&#A7F3D0&l%theme_display%"
     lore:
       - "&#475569&m                               "
-      - "&#94A3B8▪ &#E2E8F0主题 ID: &#A7F3D0%theme_id%"
-      - "&#94A3B8▪ &#E2E8F0解锁权限: &#A7F3D0%theme_permission%"
       - "&#94A3B8▪ &#E2E8F0稀有度: &#FDE047%theme_rarity%"
       - "&#94A3B8▪ &#E2E8F0当前状态: %theme_status%"
       - ""
@@ -93,8 +91,6 @@ templates:
     name: "&#FDE047&l%theme_display%"
     lore:
       - "&#475569&m                               "
-      - "&#94A3B8▪ &#E2E8F0主题 ID: &#FDE047%theme_id%"
-      - "&#94A3B8▪ &#E2E8F0解锁权限: &#FDE047%theme_permission%"
       - "&#94A3B8▪ &#E2E8F0稀有度: &#FDE047%theme_rarity%"
       - "&#94A3B8▪ &#E2E8F0当前状态: %theme_status%"
       - ""
@@ -109,8 +105,6 @@ templates:
     name: "&#94A3B8&l%theme_display%"
     lore:
       - "&#475569&m                               "
-      - "&#94A3B8▪ &#E2E8F0主题 ID: &#71717A%theme_id%"
-      - "&#94A3B8▪ &#E2E8F0所需权限: &#F87171%theme_permission%"
       - "&#94A3B8▪ &#E2E8F0稀有度: &#71717A%theme_rarity%"
       - "&#94A3B8▪ &#E2E8F0当前状态: %theme_status%"
       - ""
