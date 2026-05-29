@@ -29,7 +29,7 @@ Folia 下 `broadcast.range-mode: nearby` 和 `card.mode: nearby` 不做跨区域
 ## 安装方式
 
 1. 执行 `mvn clean package`。
-2. 将 `target/DreamKillEcho-1.0.0.jar` 放入服务器 `plugins` 目录。
+2. 将 `target/dreamkillecho-1.0.0.jar` 放入服务器 `plugins` 目录。
 3. 启动服务器，修改生成的 `config.yml`、`themes.yml`、`gui/theme-menu.yml`、`lang/zh_cn.yml`、`lang/en_us.yml`、`storage.yml`。
 4. 使用 `/dke reload` 热重载非存储连接类型配置。修改 `storage.type` 后需要重启。
 

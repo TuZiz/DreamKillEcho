@@ -30,6 +30,7 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     private val loadedProfiles = ConcurrentHashMap.newKeySet<UUID>()
     private val loadedStats = ConcurrentHashMap.newKeySet<UUID>()
     private val pendingProfileUpdates = HashMap<UUID, MutableList<(PlayerProfile) -> Unit>>()
+    private val degradedStats = HashMap<UUID, DegradedStatsState>()
     private val profileLock = Any()
     private val statsLock = Any()
     private val playerRepository = PlayerRepository()
@@ -244,18 +245,21 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
             victimStats.currentStreak = 0
             victimStats.updatedAt = System.currentTimeMillis()
             dirtyStats += victimUuid
+            if (victimUuid !in loadedStats) degradedStats[victimUuid]?.recordDeath()
 
             var killerStreak = 0
             var killerMaxStreak = 0
             if (killerUuid != null && countStats) {
+                val now = System.currentTimeMillis()
                 val killerStats = stats.computeIfAbsent(killerUuid) { PlayerStats(killerUuid) }
                 killerStats.kills += 1
                 killerStats.currentStreak += 1
                 killerStats.maxStreak = killerStats.maxStreak.coerceAtLeast(killerStats.currentStreak)
                 killerStats.lastVictimUuid = victimUuid
-                killerStats.lastKillTime = System.currentTimeMillis()
-                killerStats.updatedAt = System.currentTimeMillis()
+                killerStats.lastKillTime = now
+                killerStats.updatedAt = now
                 dirtyStats += killerUuid
+                if (killerUuid !in loadedStats) degradedStats[killerUuid]?.recordKill(victimUuid, now)
                 killerStreak = killerStats.currentStreak
                 killerMaxStreak = killerStats.maxStreak
             }
@@ -363,6 +367,8 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     fun resetStats(uuid: UUID) {
         synchronized(statsLock) {
             stats[uuid] = PlayerStats(uuid).also { it.updatedAt = System.currentTimeMillis() }
+            degradedStats -= uuid
+            loadedStats += uuid
             dirtyStats += uuid
         }
     }
@@ -416,11 +422,24 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
             ?: run {
                 synchronized(statsLock) {
                     stats.computeIfAbsent(uuid) { PlayerStats(uuid) }
+                    degradedStats.computeIfAbsent(uuid) { DegradedStatsState() }
                 }
                 return true
             }
+        val cached = synchronized(statsLock) { stats[uuid]?.copy() }
+        val degraded = synchronized(statsLock) { degradedStats[uuid]?.copy() }
+        if (uuid in dirtyStats && cached != null) {
+            val merged = mergeUnloadedStats(loaded, cached, degraded)
+            synchronized(statsLock) {
+                stats[uuid] = merged
+                degradedStats -= uuid
+                loadedStats += uuid
+            }
+            return true
+        }
         mergeStats(uuid, loaded)
         loadedStats += uuid
+        synchronized(statsLock) { degradedStats -= uuid }
         return true
     }
 
@@ -542,30 +561,82 @@ class StorageService(private val plugin: JavaPlugin, private val settings: Stora
     private fun statForFlush(connection: Connection, uuid: UUID): PlayerStats? {
         val cached = synchronized(statsLock) { stats[uuid]?.copy() } ?: return null
         if (uuid in loadedStats) return cached
+        val degraded = synchronized(statsLock) { degradedStats[uuid]?.copy() }
         val loaded = statsRepository.load(connection, uuid)
-        val merged = if (loaded != null) mergeUnloadedStats(loaded, cached) else cached
+        val merged = if (loaded != null) mergeUnloadedStats(loaded, cached, degraded) else cached
         synchronized(statsLock) {
             stats[uuid] = merged
             loadedStats += uuid
+            degradedStats -= uuid
             return merged.copy()
         }
     }
 
-    private fun mergeUnloadedStats(loaded: PlayerStats, cached: PlayerStats): PlayerStats {
+    private fun mergeUnloadedStats(loaded: PlayerStats, cached: PlayerStats, degraded: DegradedStatsState?): PlayerStats {
         val merged = loaded.copy()
-        merged.kills += cached.kills
-        merged.deaths += cached.deaths
-        merged.currentStreak = if (cached.deaths > 0) {
-            cached.currentStreak
+        if (degraded != null) {
+            merged.kills += degraded.killsDelta
+            merged.deaths += degraded.deathsDelta
+            val peakBeforeFirstDeath = loaded.currentStreak + degraded.peakBeforeFirstDeath
+            merged.currentStreak = if (degraded.sawDeath) {
+                degraded.streakSinceLastDeath
+            } else {
+                loaded.currentStreak + degraded.streakSinceLastDeath
+            }
+            merged.maxStreak = maxOf(
+                merged.maxStreak,
+                merged.currentStreak,
+                peakBeforeFirstDeath,
+                degraded.peakAfterFirstDeath
+            )
+            if (degraded.lastKillTime > 0L) {
+                merged.lastVictimUuid = degraded.lastVictimUuid
+                merged.lastKillTime = degraded.lastKillTime
+            }
         } else {
-            merged.currentStreak + cached.currentStreak
-        }
-        merged.maxStreak = maxOf(merged.maxStreak, merged.currentStreak, cached.maxStreak)
-        if (cached.lastKillTime > 0L) {
-            merged.lastVictimUuid = cached.lastVictimUuid
-            merged.lastKillTime = cached.lastKillTime
+            merged.kills += cached.kills
+            merged.deaths += cached.deaths
+            merged.currentStreak = if (cached.deaths > 0) {
+                cached.currentStreak
+            } else {
+                merged.currentStreak + cached.currentStreak
+            }
+            merged.maxStreak = maxOf(merged.maxStreak, merged.currentStreak, cached.maxStreak)
+            if (cached.lastKillTime > 0L) {
+                merged.lastVictimUuid = cached.lastVictimUuid
+                merged.lastKillTime = cached.lastKillTime
+            }
         }
         merged.updatedAt = maxOf(merged.updatedAt, cached.updatedAt)
         return merged
+    }
+
+    private data class DegradedStatsState(
+        var killsDelta: Int = 0,
+        var deathsDelta: Int = 0,
+        var streakSinceLastDeath: Int = 0,
+        var peakBeforeFirstDeath: Int = 0,
+        var peakAfterFirstDeath: Int = 0,
+        var sawDeath: Boolean = false,
+        var lastVictimUuid: UUID? = null,
+        var lastKillTime: Long = 0L
+    ) {
+        fun recordKill(victimUuid: UUID, time: Long) {
+            killsDelta += 1
+            streakSinceLastDeath += 1
+            if (sawDeath) {
+                peakAfterFirstDeath = peakAfterFirstDeath.coerceAtLeast(streakSinceLastDeath)
+            } else {
+                peakBeforeFirstDeath = peakBeforeFirstDeath.coerceAtLeast(streakSinceLastDeath)
+            }
+            lastVictimUuid = victimUuid
+            lastKillTime = time
+        }
+
+        fun recordDeath() {
+            deathsDelta += 1
+            sawDeath = true
+            streakSinceLastDeath = 0
+        }
     }
 }
