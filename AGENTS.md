@@ -25,3 +25,4 @@
 23. `storage.shutdown-timeout-seconds` 控制关闭时最终 dirty 数据写回等待时间；修改存储生命周期时必须保持可配置并输出 dirtyProfiles / dirtyStats 日志。
 24. Folia 下 `broadcast.range-mode: nearby` 和 `card.mode: nearby` 必须退化为 global 或明确安全快照模式，禁止跨区域实时扫描玩家位置。
 25. 主题配置使用 `rarity` 作为展示稀有度；玩家未手动选择主题时必须回退 `default`，禁止恢复 `priority` 自动高权限主题选择。
+26. 原版武器与投掷物显示名必须优先走 `lang/zh_cn.yml` / `lang/en_us.yml` 的 `weapon.material.*` 与 `weapon.projectile.*`，避免客户端语言不同导致播报文案不一致。

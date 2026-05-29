@@ -80,7 +80,7 @@ class CustomCommand : SubCommand {
             preview.message ?: message,
             player,
             CommandUtil.previewPlaceholders(player, "default", context.services),
-            CommandUtil.previewComponentPlaceholders()
+            CommandUtil.previewComponentPlaceholders(context.services)
         )
         context.services.messages.send(player, "custom-preview", componentPlaceholders = mapOf("message" to rendered))
         return true

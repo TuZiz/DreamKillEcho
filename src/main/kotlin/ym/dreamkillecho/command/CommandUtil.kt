@@ -1,7 +1,6 @@
 package ym.dreamkillecho.command
 
 import net.kyori.adventure.text.Component
-import org.bukkit.Material
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import ym.dreamkillecho.bootstrap.PluginServices
@@ -39,7 +38,7 @@ object CommandUtil {
             "killer" to player.name,
             "victim" to player.name,
             "mob" to player.name,
-            "weapon" to "Diamond Sword",
+            "weapon" to previewWeaponName(services),
             "world" to player.world.name,
             "killer_health" to "20",
             "victim_health" to "0",
@@ -56,9 +55,14 @@ object CommandUtil {
         )
     }
 
-    fun previewComponentPlaceholders(): Map<String, Component> {
+    fun previewComponentPlaceholders(services: PluginServices): Map<String, Component> {
+        val weaponName = previewWeaponName(services)
         return mapOf(
-            "weapon" to Component.translatable(Material.DIAMOND_SWORD.itemTranslationKey ?: "item.minecraft.diamond_sword")
+            "weapon" to Component.text(weaponName)
         )
+    }
+
+    private fun previewWeaponName(services: PluginServices): String {
+        return services.messages.rawOrNull("weapon.material.diamond_sword") ?: "Diamond Sword"
     }
 }

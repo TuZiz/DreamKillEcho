@@ -349,7 +349,7 @@ class ThemeMenuService(
             "killer" to player.name,
             "victim" to "Steve",
             "mob" to "Zombie",
-            "weapon" to "Diamond Sword",
+            "weapon" to (messages.rawOrNull("weapon.material.diamond_sword") ?: "Diamond Sword"),
             "world" to player.world.name,
             "killer_health" to "20",
             "victim_health" to "0",

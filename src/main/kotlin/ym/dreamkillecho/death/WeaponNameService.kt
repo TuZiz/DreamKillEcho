@@ -32,22 +32,25 @@ class WeaponNameService(private val messages: MessageService) {
             val fallback = ChatColor.stripColor(displayName) ?: displayName
             return WeaponDisplay(fallback, legacySerializer.deserialize(displayName))
         }
-        val fallback = readableKey(item.type.name)
-        return WeaponDisplay(fallback, Component.translatable(itemTranslationKey(item.type)))
+        val fallback = localizedItemName(item.type)
+        return WeaponDisplay(fallback, Component.text(fallback))
     }
 
     fun projectileName(projectile: Projectile): WeaponDisplay {
-        val fallback = readableKey(projectile.type.name)
-        return WeaponDisplay(fallback, Component.translatable(projectileTranslationKey(projectile)))
+        val fallback = localizedProjectileName(projectile)
+        return WeaponDisplay(fallback, Component.text(fallback))
     }
 
-    private fun itemTranslationKey(material: Material): String {
-        material.itemTranslationKey?.let { return it }
-        return "item.minecraft.${material.key.key}"
+    private fun localizedItemName(material: Material): String {
+        return messages.rawOrNull("weapon.material.${material.key.key}")
+            ?: messages.rawOrNull("weapon.material.${material.name.lowercase()}")
+            ?: readableKey(material.name)
     }
 
-    private fun projectileTranslationKey(projectile: Projectile): String {
-        return projectile.type.translationKey
+    private fun localizedProjectileName(projectile: Projectile): String {
+        return messages.rawOrNull("weapon.projectile.${projectile.type.key.key}")
+            ?: messages.rawOrNull("weapon.projectile.${projectile.type.name.lowercase()}")
+            ?: readableKey(projectile.type.name)
     }
 
     private fun readableKey(value: String): String {
