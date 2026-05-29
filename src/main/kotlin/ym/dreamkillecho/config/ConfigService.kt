@@ -17,12 +17,28 @@ class ConfigService private constructor(
         fun load(plugin: JavaPlugin): ConfigService {
             val config = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "config.yml"))
             val languageSettings = parseLanguage(config)
-            val language = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "lang/${languageSettings.defaultLanguage}.yml"))
-            val fallbackLanguage = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "lang/${languageSettings.fallbackLanguage}.yml"))
+            val language = loadLanguage(plugin, languageSettings.defaultLanguage)
+            val fallbackLanguage = loadLanguage(plugin, languageSettings.fallbackLanguage)
             val themes = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "themes.yml"))
             val themeMenu = ThemeMenuConfig.load(plugin)
             val storageYaml = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "storage.yml"))
             return ConfigService(parseSettings(config), language, fallbackLanguage, themes, themeMenu, parseStorage(storageYaml))
+        }
+
+        private fun loadLanguage(plugin: JavaPlugin, languageId: String): YamlConfiguration {
+            val loaded = YamlConfiguration.loadConfiguration(File(plugin.dataFolder, "lang/$languageId.yml"))
+            val bundled = plugin.getResource("lang/$languageId.yml")?.bufferedReader(Charsets.UTF_8)?.use {
+                YamlConfiguration.loadConfiguration(it)
+            } ?: return loaded
+            mergeMissingDefaults(loaded, bundled)
+            return loaded
+        }
+
+        private fun mergeMissingDefaults(target: YamlConfiguration, defaults: YamlConfiguration) {
+            for (key in defaults.getKeys(true)) {
+                if (defaults.isConfigurationSection(key) || target.contains(key)) continue
+                target.set(key, defaults.get(key))
+            }
         }
 
         private fun parseLanguage(yaml: YamlConfiguration): LanguageSettings {

@@ -26,3 +26,4 @@
 24. Folia 下 `broadcast.range-mode: nearby` 和 `card.mode: nearby` 必须退化为 global 或明确安全快照模式，禁止跨区域实时扫描玩家位置。
 25. 主题配置使用 `rarity` 作为展示稀有度；玩家未手动选择主题时必须回退 `default`，禁止恢复 `priority` 自动高权限主题选择。
 26. 原版武器与投掷物显示名必须优先走 `lang/zh_cn.yml` / `lang/en_us.yml` 的 `weapon.material.*` 与 `weapon.projectile.*`，避免客户端语言不同导致播报文案不一致。
+27. 语言文件新增默认 key 时必须让旧服务器已有语言文件在内存中获得 jar 内默认值，禁止要求管理员手工删除语言文件才能修复缺失 key。
