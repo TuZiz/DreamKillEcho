@@ -1,0 +1,382 @@
+Title: "<gradient:#A18CD1:#FBC2EB><bold>击杀播报商店</bold></gradient>"
+
+Shape:
+  - "BBBBBBBBB"
+  - "B`自定义播报`B`VIP播报`B`VIP+播报`B"
+  - "B`MVP播报`B`MVP+播报`B`SVIP播报`B"
+  - "B`甜蜜播报`B`击杀名片`B`打开仓库`B"
+  - "BBBBBBBBB"
+  - "BB`返回点券商店`B`返回主菜单`BB"
+
+Fill:
+  material: BLACK_STAINED_GLASS_PANE
+  name: " "
+
+buttons:
+  "B":
+    material: BLACK_STAINED_GLASS_PANE
+    name: " "
+
+  "自定义播报":
+    material: WRITABLE_BOOK
+    glow: true
+    name: "<gradient:#A18CD1:#FBC2EB><bold>✦ 自定义击杀播报 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁 /dke custom set，自定义你的击杀播报文案</#E0E0E0>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>提交后按插件配置进入审核或直接生效</#E0E0E0>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>280 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#A18CD1>➭</#A18CD1> <#FBC2EB>左键点击购买</#FBC2EB>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *280"
+        actions:
+          - "take-point: 280"
+          - "console: lp user %player_name% permission set dreamkillecho.custom.message true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &d&l自定义播报已解锁||&7使用 /dke custom set <内容>"
+          - "tell: &8[&d播报商店&8] &a你已解锁自定义击杀播报，可使用 &f/dke custom set <内容>&a。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e280 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.custom.message"
+        material: WRITABLE_BOOK
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>✦ 自定义击杀播报 | 已解锁 ✦</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有自定义击杀播报权限</#38F9D7>"
+          - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>使用 /dke custom set <内容> 设置文案</#E0E0E0>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke custom status"
+
+  "VIP+播报":
+    material: GOLD_BLOCK
+    glow: true
+    name: "<gradient:#FFD700:#FF9A9E><bold>✦ VIP+ 播报主题 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁 VIP+ 击杀播报主题</#E0E0E0>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>比 VIP 更醒目的播报外观</#E0E0E0>"
+      - ""
+      - " <#38F9D7>播报示例:</#38F9D7>"
+      - " <#FFD700>PlayerA</#FFD700> <gray>用</gray> <white>钻石剑</white> <gradient:#FFD700:#FF9A9E>无情终结了</gradient> <#DC143C>PlayerB</#DC143C>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>280 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#FFD700>➭</#FFD700> <#FF9A9E>左键点击购买</#FF9A9E>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *280"
+        actions:
+          - "take-point: 280"
+          - "console: lp user %player_name% permission set dreamkillecho.theme.vipplus true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &6&lVIP+ 播报已解锁||&7使用 /dke theme 切换"
+          - "tell: &8[&d播报商店&8] &a你已解锁 &eVIP+ 播报主题&a。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e280 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.theme.vipplus"
+        material: GOLD_BLOCK
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>✦ VIP+ 播报主题 | 已解锁 ✦</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有 VIP+ 播报主题</#38F9D7>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke set vip-plus"
+
+  "MVP+播报":
+    material: DIAMOND_BLOCK
+    glow: true
+    name: "<gradient:#5EE7DF:#B490CA><bold>✦ MVP+ 播报主题 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁 MVP+ 击杀播报主题</#E0E0E0>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>高亮展示你的专属击杀风格</#E0E0E0>"
+      - ""
+      - " <#38F9D7>播报示例:</#38F9D7>"
+      - " <#00FFFF>PlayerA</#00FFFF> <gray>挥动</gray> <white>钻石剑</white> <gradient:#5EE7DF:#B490CA>高调带走了</gradient> <#FF1493>PlayerB</#FF1493>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>328 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#5EE7DF>➭</#5EE7DF> <#B490CA>左键点击购买</#B490CA>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *328"
+        actions:
+          - "take-point: 328"
+          - "console: lp user %player_name% permission set dreamkillecho.theme.mvpplus true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &b&lMVP+ 播报已解锁||&7使用 /dke theme 切换"
+          - "tell: &8[&d播报商店&8] &a你已解锁 &bMVP+ 播报主题&a。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e328 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.theme.mvpplus"
+        material: DIAMOND_BLOCK
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>✦ MVP+ 播报主题 | 已解锁 ✦</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有 MVP+ 播报主题</#38F9D7>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke set mvp-plus"
+
+  "VIP播报":
+    material: GOLD_INGOT
+    glow: true
+    name: "<gradient:#FFD700:#FFFACD><bold>✦ VIP 播报主题 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁 VIP 击杀播报主题</#E0E0E0>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>购买后可在 /dke theme 中切换</#E0E0E0>"
+      - ""
+      - " <#38F9D7>播报示例:</#38F9D7>"
+      - " <#FFD700>PlayerA</#FFD700> <gray>用</gray> <white>钻石剑</white> <gradient:#FFD700:#FFFACD>斩杀了</gradient> <#FF8C00>PlayerB</#FF8C00>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>280 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#FFD700>➭</#FFD700> <#FFFACD>左键点击购买</#FFFACD>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *280"
+        actions:
+          - "take-point: 280"
+          - "console: lp user %player_name% permission set dreamkillecho.theme.vip true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &6&lVIP 播报已解锁||&7使用 /dke theme 切换"
+          - "tell: &8[&d播报商店&8] &a你已解锁 &eVIP 播报主题&a。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e280 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.theme.vip"
+        material: GOLD_INGOT
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>✦ VIP 播报主题 | 已解锁 ✦</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有 VIP 播报主题</#38F9D7>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke set vip"
+
+  "MVP播报":
+    material: DIAMOND
+    glow: true
+    name: "<gradient:#00C6FB:#005BEA><bold>✦ MVP 播报主题 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁更醒目的 MVP 击杀播报主题</#E0E0E0>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>只改变展示，不提供击杀收益</#E0E0E0>"
+      - ""
+      - " <#38F9D7>播报示例:</#38F9D7>"
+      - " <#00C6FB>PlayerA</#00C6FB> <gray>以</gray> <white>钻石剑</white> <gradient:#00C6FB:#005BEA>强势屠戮了</gradient> <#005BEA>PlayerB</#005BEA>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>280 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#00C6FB>➭</#00C6FB> <#005BEA>左键点击购买</#005BEA>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *280"
+        actions:
+          - "take-point: 280"
+          - "console: lp user %player_name% permission set dreamkillecho.theme.mvp true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &b&lMVP 播报已解锁||&7使用 /dke theme 切换"
+          - "tell: &8[&d播报商店&8] &a你已解锁 &bMVP 播报主题&a。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e280 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.theme.mvp"
+        material: DIAMOND
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>✦ MVP 播报主题 | 已解锁 ✦</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有 MVP 播报主题</#38F9D7>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke set mvp"
+
+  "SVIP播报":
+    material: NETHER_STAR
+    glow: true
+    name: "<gradient:#F6D365:#FDA085><bold>✦ SVIP 播报主题 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁高级 SVIP 击杀播报主题</#E0E0E0>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>适合长期赞助者的展示外观</#E0E0E0>"
+      - ""
+      - " <#38F9D7>播报示例:</#38F9D7>"
+      - " <#FF8C00>PlayerA</#FF8C00> <gray>使用</gray> <white>钻石剑</white> <gradient:#FF4500:#FF0000>降下神罚，抹除了</gradient> <#8B0000>PlayerB</#8B0000>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>388 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#F6D365>➭</#F6D365> <#FDA085>左键点击购买</#FDA085>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *388"
+        actions:
+          - "take-point: 388"
+          - "console: lp user %player_name% permission set dreamkillecho.theme.svip true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &6&lSVIP 播报已解锁||&7使用 /dke theme 切换"
+          - "tell: &8[&d播报商店&8] &a你已解锁 &6SVIP 播报主题&a。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e388 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.theme.svip"
+        material: NETHER_STAR
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>✦ SVIP 播报主题 | 已解锁 ✦</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有 SVIP 播报主题</#38F9D7>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke set svip"
+
+  "甜蜜播报":
+    material: PINK_DYE
+    glow: true
+    name: "<gradient:#FF9A9E:#FECFEF><bold>✦ 甜蜜播报主题 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁 love 个性播报主题</#E0E0E0>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>适合情侣、好友与趣味展示</#E0E0E0>"
+      - ""
+      - " <#38F9D7>播报示例:</#38F9D7>"
+      - " <#FF9A9E>PlayerA</#FF9A9E> <gray>用</gray> <white>钻石剑</white> <gradient:#FF9A9E:#FECFEF>温柔地带走了</gradient> <#FECFEF>PlayerB</#FECFEF> ~"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>280 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#FF9A9E>➭</#FF9A9E> <#FECFEF>左键点击购买</#FECFEF>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *280"
+        actions:
+          - "take-point: 280"
+          - "console: lp user %player_name% permission set dreamkillecho.theme.love true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &d&l甜蜜播报已解锁||&7使用 /dke theme 切换"
+          - "tell: &8[&d播报商店&8] &a你已解锁 &d甜蜜播报主题&a。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e280 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.theme.love"
+        material: PINK_DYE
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>✦ 甜蜜播报主题 | 已解锁 ✦</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有 love 播报主题</#38F9D7>"
+        click:
+          - "close"
+          - "delay: 1"
+          - "player: dke set love"
+
+  "击杀名片":
+    material: MAP
+    glow: true
+    name: "<gradient:#84FAB0:#8FD3F4><bold>✦ 击杀名片展示 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>解锁击杀后的专属名片展示权限</#E0E0E0>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>用于展示身份与风格，不影响战斗</#E0E0E0>"
+      - ""
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>价格:</#CCCCCC> <color:#FFD700>280 星辰</color>"
+      - " <#F6D365>❖</#F6D365> <#CCCCCC>当前星辰:</#CCCCCC> <color:#00FF7F>%playerpoints_points%</color>"
+      - ""
+      - " <#84FAB0>➭</#84FAB0> <#8FD3F4>左键点击购买</#8FD3F4>"
+    click:
+      - condition: "check papi *%playerpoints_points% >= *280"
+        actions:
+          - "take-point: 280"
+          - "console: lp user %player_name% permission set dreamkillecho.card.vip true"
+          - "sound: ENTITY_PLAYER_LEVELUP:1:1.4"
+          - "title: &a&l击杀名片已解锁||&7击杀后展示专属名片"
+          - "tell: &8[&d播报商店&8] &a你已解锁击杀名片展示权限。"
+          - "close"
+        deny:
+          - "sound: BLOCK_ANVIL_DESTROY:1:2"
+          - "title: &c&l购买失败||&7星辰不足"
+          - "tell: &8[&c提示&8] &c需要 &e280 星辰&c，当前: &f%playerpoints_points%"
+    icons:
+      - condition: "perm *dreamkillecho.card.vip"
+        material: MAP
+        glow: true
+        name: "<gradient:#43E97B:#38F9D7><bold>✦ 击杀名片展示 | 已解锁 ✦</bold></gradient>"
+        lore:
+          - ""
+          - " <#43E97B>✔</#43E97B> <#38F9D7>你已拥有击杀名片展示权限</#38F9D7>"
+
+  "打开仓库":
+    material: COMPASS
+    glow: true
+    name: "<gradient:#43E97B:#38F9D7><bold>✦ 打开播报主题仓库 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>查看已解锁主题并切换当前播报样式</#E0E0E0>"
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>新增主题后会由 DreamKillEcho 自动分页显示</#E0E0E0>"
+      - ""
+      - " <#43E97B>▶</#43E97B> <#38F9D7>点击打开 /dke theme</#38F9D7>"
+    click:
+      - "close"
+      - "delay: 1"
+      - "player: dke theme"
+
+  "返回点券商店":
+    material: ARROW
+    name: "<gradient:#FF9A9E:#FECFEF><bold>✦ 返回点券商店 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>返回星辰商店主分类</#E0E0E0>"
+      - ""
+      - " <#FF9A9E>▶</#FF9A9E> <#FECFEF>点击返回</#FECFEF>"
+    click:
+      - "menu: 点券商店"
+
+  "返回主菜单":
+    material: BARRIER
+    name: "<gradient:#FF9A9E:#FECFEF><bold>✦ 返回主菜单 ✦</bold></gradient>"
+    lore:
+      - ""
+      - " <#A9A9A9>▪</#A9A9A9> <#E0E0E0>返回服务器综合主菜单</#E0E0E0>"
+      - ""
+      - " <#FF9A9E>▶</#FF9A9E> <#FECFEF>点击返回</#FECFEF>"
+    click:
+      - "back"
